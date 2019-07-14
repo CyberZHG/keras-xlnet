@@ -144,24 +144,31 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
             w_kv = self.activation(w_kv)
             w_r = self.activation(w_r)
 
-        w_k = w_kv[:, :, :self.units]                         # (batch, prev_len + seq_len, units)
-        w_v = w_kv[:, :, self.units:]                         # (batch, prev_len + seq_len, units)
+        w_k = w_kv[:, :, :self.units]                    # (batch, prev_len + seq_len, units)
+        w_v = w_kv[:, :, self.units:]                    # (batch, prev_len + seq_len, units)
+        q_len, k_len = K.shape(w_q)[1], K.shape(w_k)[1]
 
         w_qc = K.bias_add(w_q, bias_context)
-        w_qc = self._reshape_to_batches(w_qc)                 # (batch * n_head, seq_len, units_head)
-        w_k = self._reshape_to_batches(w_k)                   # (batch * n_head, prev_len + seq_len, units_head)
-        a_context = K.batch_dot(w_qc, w_k, axes=2)            # (batch * n_head, seq_len, prev_len + seq_len)
+        w_qc = self._reshape_to_batches(w_qc)            # (batch * n_head, seq_len, units_head)
+        w_k = self._reshape_to_batches(w_k)              # (batch * n_head, prev_len + seq_len, units_head)
+        a_context = K.batch_dot(w_qc, w_k, axes=2)       # (batch * n_head, seq_len, prev_len + seq_len)
 
         w_qr = K.bias_add(w_q, bias_relative)
-        w_qr = self._reshape_to_batches(w_qr)                 # (batch * n_head, seq_len, units_head)
-        w_r = self._reshape_to_batches(w_r)                   # (batch * n_head, prev_len + seq_len, units_head)
-        a_relative = K.batch_dot(w_qr, w_r, axes=2)           # (batch * n_head, seq_len, prev_len + seq_len)
-        a_relative = self._relative_shift(a_relative)         # (batch * n_head, seq_len, prev_len + seq_len)
+        w_qr = self._reshape_to_batches(w_qr)            # (batch * n_head, seq_len, units_head)
+        w_r = self._reshape_to_batches(w_r)              # (batch * n_head, prev_len + seq_len, units_head)
+        a_relative = K.batch_dot(w_qr, w_r, axes=2)      # (batch * n_head, seq_len, prev_len + seq_len)
+        a_relative = self._relative_shift(a_relative)    # (batch * n_head, seq_len, prev_len + seq_len)
 
-        att = (a_context + a_relative) / K.sqrt(K.constant(self.units_head, dtype=K.floatx()))
+        w_qs = K.bias_add(w_q, bias_segment)
+        w_qs = self._reshape_to_batches(w_qs)            # (batch * n_head, seq_len, units_head)
+        segments = K.reshape(segments, (K.shape(segments)[0], q_len * k_len, self.units))
+        w_s = self._reshape_to_batches(segments)         # (batch * n_head, seg_len * (prev_len + seq_len), units_head)
+        w_s = K.reshape(w_s, (K.shape(w_s)[0], q_len, k_len, self.units_head))
+        a_segment = K.batch_dot(w_qs, w_s, axes=[2, 3])  # (batch * n_head, seq_len, prev_len + seq_len)
+
+        att = (a_context + a_relative + a_segment) / K.sqrt(K.constant(self.units_head, dtype=K.floatx()))
         exp = K.exp(att - K.max(att, axis=-1, keepdims=True))
 
-        q_len, k_len = K.shape(w_q)[1], K.shape(w_k)[1]
         indices = K.expand_dims(K.arange(0, k_len), axis=0)
         upper = K.expand_dims(K.arange(k_len - q_len, k_len), axis=-1)
         exp *= K.expand_dims(K.cast(indices <= upper, K.floatx()), axis=0)

@@ -19,9 +19,9 @@ class RelativeSegmentEmbedding(keras.layers.Embedding):
     """
 
     def __init__(self, units, **kwargs):
-        super(RelativeSegmentEmbedding, self).__init__(input_dim=2,
-                                                       output_dim=units,
-                                                       **kwargs)
+        kwargs['input_dim'] = 2
+        kwargs['output_dim'] = units
+        super(RelativeSegmentEmbedding, self).__init__(**kwargs)
         self.supports_masking = True
         self.units = units
 

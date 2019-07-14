@@ -8,6 +8,7 @@ from keras_layer_normalization import LayerNormalization
 from keras_position_wise_feed_forward import FeedForward
 
 from .segment_bias import SegmentBias
+from .segment_embed import RelativeSegmentEmbedding
 from .attention import RelativePartialMultiHeadSelfAttention as Attention
 
 __all__ = [
@@ -23,6 +24,7 @@ def get_custom_objects() -> dict:
         'PositionalEmbedding': PositionalEmbedding,
         'RelativeBias': RelativeBias,
         'SegmentBias': SegmentBias,
+        'RelativeSegmentEmbedding': RelativeSegmentEmbedding,
         'Memory': Memory,
         'LayerNormalization': LayerNormalization,
         'RelativePartialMultiHeadSelfAttention': Attention,
@@ -132,11 +134,10 @@ def build_xlnet(units,
 
     content_output, query_output = token_embed, token_embed
     for i in range(num_block):
-        segment_embed = keras.layers.Embedding(
-            input_dim=2,
-            output_dim=units,
+        segment_embed = RelativeSegmentEmbedding(
+            units=units,
             name='Embed-Segment-{}'.format(i + 1),
-        )(seg_input)
+        )([seg_input, memories[i]])
 
         def _build_block(name, query, content):
             attention_input = query

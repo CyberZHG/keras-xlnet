@@ -111,6 +111,7 @@ venv.bak/
 
 # Images
 *.png
+*.jpg
 
 # Models
 *.h5
