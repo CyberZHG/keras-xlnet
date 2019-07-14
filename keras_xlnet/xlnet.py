@@ -133,7 +133,7 @@ def build_xlnet(units,
                 units,
                 name='Relative-Bias-{}'.format(i + 1),
             )(memories[i]))
-            segment_biases.append(RelativeBias(
+            segment_biases.append(SegmentBias(
                 units,
                 name='Segment-Bias-{}'.format(i + 1),
             )(memories[i]))
@@ -160,7 +160,7 @@ def build_xlnet(units,
         else:
             attention_dropout_layer = None
         attention_add = keras.layers.Add(name='Attention-Residual-{}'.format(i + 1))
-        attention_layer_norm = LayerNormalization(name='Attention-Norm-{}'.format(i + 1))
+        attention_layer_norm = LayerNormalization(name='Attention-Normal-{}'.format(i + 1))
 
         feed_forward = FeedForward(
             units=hidden_dim,
