@@ -23,12 +23,7 @@ class TestSegmentEmbed(TestCase):
         func = K.function(inputs, [outputs])
         query = [0, 1, 2, 2, 1, 0]
         key = [0, 0, 0] + query
-        inputs = [
-            np.array([
-                [0, 1, 2, 2, 1, 0],
-            ]),
-            np.zeros((1, 3, 3)),
-        ]
+        inputs = [np.array([query]), np.zeros((1, 3, 3))]
         outputs = func(inputs)[0]
         self.assertEqual((1, 6, 9, 3), outputs.shape)
         for i in range(6):

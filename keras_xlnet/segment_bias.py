@@ -14,7 +14,7 @@ class SegmentBias(keras.layers.Layer):
         Any tensor.
 
     # Output shape
-        1D tensors with shape: `(units,)`.
+        1D tensor with shape: `(units,)`.
 
     # References
         - [XLNet: Generalized Autoregressive Pretraining for Language Understanding](https://arxiv.org/pdf/1906.08237)
