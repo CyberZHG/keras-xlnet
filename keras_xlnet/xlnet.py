@@ -1,5 +1,4 @@
 from .backend import keras
-from .backend import backend as K
 
 from keras_embed_sim import EmbeddingRet, EmbeddingSim
 from keras_transformer import gelu
@@ -10,6 +9,7 @@ from keras_position_wise_feed_forward import FeedForward
 from .segment_bias import SegmentBias
 from .segment_embed import RelativeSegmentEmbedding
 from .permutation import PermutationMask
+from .mask_embed import MaskEmbedding
 from .attention import RelativePartialMultiHeadSelfAttention as Attention
 
 __all__ = [
@@ -24,6 +24,7 @@ def get_custom_objects() -> dict:
         'EmbeddingSim': EmbeddingSim,
         'PositionalEmbedding': PositionalEmbedding,
         'PermutationMask': PermutationMask,
+        'MaskEmbedding': MaskEmbedding,
         'RelativeBias': RelativeBias,
         'SegmentBias': SegmentBias,
         'RelativeSegmentEmbedding': RelativeSegmentEmbedding,
@@ -81,21 +82,38 @@ def build_xlnet(units,
         shape=(1,),
         name='Input-Memory-Length',
     )
-    perm_input = keras.layers.Input(
-        shape=(target_len, target_len),
-        name='Input-Perm',
-    )
+    inputs = [token_input, seg_input, memory_length_input]
+    if training:
+        query_input = keras.layers.Input(
+            shape=(target_len,),
+            name='Input-Mask',
+        )
+        inputs.append(query_input)
+    else:
+        query_input = None
     token_embed, embed_weights = EmbeddingRet(
         input_dim=num_token,
         output_dim=units,
         mask_zero=True,
         name='Embed-Token',
     )(token_input)
+    if training:
+        mask_embed = MaskEmbedding(
+            units=units,
+            name='Embed-Mask'
+        )([token_embed, query_input])
+    else:
+        mask_embed = None
     if 0.0 < dropout < 1.0:
         token_embed = keras.layers.Dropout(
             rate=dropout,
             name='Embed-Token-Dropout'
         )(token_embed)
+        if training:
+            mask_embed = keras.layers.Dropout(
+                rate=dropout,
+                name='Embed-Mask-Dropout'
+            )(mask_embed)
 
     memories = []
     for i in range(num_block):
@@ -138,7 +156,9 @@ def build_xlnet(units,
                 name='Segment-Bias-{}'.format(i + 1),
             )(memories[i]))
 
-    content_output, query_output = token_embed, token_embed
+    content_output, query_output = token_embed, None
+    if training:
+        query_output = mask_embed
     for i in range(num_block):
         segment_embed = RelativeSegmentEmbedding(
             units=units,
@@ -214,7 +234,7 @@ def build_xlnet(units,
     else:
         output = content_output
     model = keras.models.Model(
-        inputs=[token_input, seg_input, memory_length_input, perm_input],
+        inputs=inputs,
         outputs=output
     )
     return model

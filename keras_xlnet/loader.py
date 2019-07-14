@@ -69,6 +69,11 @@ def load_model_weights_from_checkpoint(model,
         loader('model/transformer/word_embedding/lookup_table'),
     ])
 
+    if in_train_phase:
+        model.get_layer(name='Embed-Mask').set_weights([
+            loader('model/transformer/mask_emb/mask_emb'),
+        ])
+
     r_w_bias = loader('model/transformer/r_w_bias')
     r_r_bias = loader('model/transformer/r_r_bias')
     r_s_bias = loader('model/transformer/r_s_bias')
