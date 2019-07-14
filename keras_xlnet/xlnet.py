@@ -8,6 +8,7 @@ from keras_layer_normalization import LayerNormalization
 from keras_position_wise_feed_forward import FeedForward
 
 from .segment_bias import SegmentBias
+from .attention import RelativePartialMultiHeadSelfAttention as Attention
 
 __all__ = [
     'get_custom_objects', 'set_custom_objects', 'build_xlnet',
@@ -24,6 +25,7 @@ def get_custom_objects() -> dict:
         'SegmentBias': SegmentBias,
         'Memory': Memory,
         'LayerNormalization': LayerNormalization,
+        'RelativePartialMultiHeadSelfAttention': Attention,
         'FeedForward': FeedForward,
     }
 
@@ -34,6 +36,7 @@ def set_custom_objects() -> None:
 
 
 def build_xlnet(units,
+                training,
                 num_token,
                 num_block,
                 num_head,
@@ -48,6 +51,7 @@ def build_xlnet(units,
     """Build XLNet.
 
     :param units: Hidden dimensions throughout the model.
+    :param training: Whether in training mode.
     :param num_token: Number of distinct tokens.
     :param num_block: Number of basic encoder blocks.
     :param num_head: Number of heads for attention.
@@ -64,6 +68,10 @@ def build_xlnet(units,
     token_input = keras.layers.Input(
         shape=(target_len,),
         name='Input-Token',
+    )
+    seg_input = keras.layers.Input(
+        shape=(target_len,),
+        name='Input-Segment',
     )
     memory_length_input = keras.layers.Input(
         shape=(1,),
@@ -92,7 +100,7 @@ def build_xlnet(units,
             memory_len=memory_len,
             target_len=target_len,
             output_dim=units,
-            name='Memory-{}'.format(i + 1),
+            name='Memory-Content-{}'.format(i + 1),
         )([token_embed, memory_length_input]))
 
     pos_embed = PositionalEmbedding(
@@ -122,49 +130,74 @@ def build_xlnet(units,
                 name='Segment-Bias-{}'.format(i + 1),
             )(memories[i]))
 
-    output = token_embed
+    content_output, query_output = token_embed, token_embed
     for i in range(num_block):
         segment_embed = keras.layers.Embedding(
             input_dim=2,
             output_dim=units,
             name='Embed-Segment-{}'.format(i + 1),
-        )
+        )(seg_input)
 
-        attention_input = output
-        # build attention
-        if 0.0 < dropout < 1.0:
-            output = keras.layers.Dropout(
-                rate=dropout,
-                name='Attention-Dropout-{}'.format(i + 1),
-            )(output)
-        output = keras.layers.Add(
-            name='Attention-Residual-{}'.format(i + 1),
-        )([attention_input, output])
-        output = LayerNormalization(
-            name='Attention-Norm-{}'.format(i + 1)
-        )(output)
+        def _build_block(name, query, content):
+            attention_input = query
+            if shared_biases:
+                context_bias, relative_bias, segment_bias = relative_biases[0], relative_biases[1], segment_biases
+            else:
+                context_bias, relative_bias  = relative_biases[i][0], relative_biases[i][1]
+                segment_bias = segment_biases[i]
+            _output = Attention(
+                units=units,
+                num_head=num_head,
+                use_bias=False,
+                attention_dropout=attention_dropout,
+                name='Attention-{}-{}'.format(name, i + 1),
+            )([
+                query, content, memories[i],
+                segment_embed, pos_embed,
+                context_bias, relative_bias, segment_bias,
+            ])
+            if 0.0 < dropout < 1.0:
+                _output = keras.layers.Dropout(
+                    rate=dropout,
+                    name='Attention-{}-Dropout-{}'.format(name, i + 1),
+                )(_output)
+            _output = keras.layers.Add(
+                name='Attention-{}-Residual-{}'.format(name, i + 1),
+            )([attention_input, _output])
+            _output = LayerNormalization(
+                name='Attention-{}-Norm-{}'.format(name, i + 1)
+            )(_output)
 
-        feed_forward_input = output
-        output = FeedForward(
-            units=hidden_dim,
-            dropout_rate=dropout,
-            name='FeedForward-{}'.format(i + 1),
-        )(output)
-        if 0.0 < dropout < 1.0:
-            output = keras.layers.Dropout(
-                rate=dropout,
-                name='FeedForward-Dropout-{}'.format(i + 1),
-            )(output)
-        output = keras.layers.Add(
-            name='FeedForward-Residual-{}'.format(i + 1),
-        )([feed_forward_input, output])
-        output = LayerNormalization(
-            name='FeedForward-Normal-{}'.format(i + 1),
-        )(output)
+            feed_forward_input = _output
+            _output = FeedForward(
+                units=hidden_dim,
+                dropout_rate=dropout,
+                name='FeedForward-{}-{}'.format(name, i + 1),
+            )(_output)
+            if 0.0 < dropout < 1.0:
+                _output = keras.layers.Dropout(
+                    rate=dropout,
+                    name='FeedForward-Dropout-{}-{}'.format(name, i + 1),
+                )(_output)
+            _output = keras.layers.Add(
+                name='FeedForward-Residual-{}-{}'.format(name, i + 1),
+            )([feed_forward_input, _output])
+            _output = LayerNormalization(
+                name='FeedForward-Normal-{}-{}'.format(name, i + 1),
+            )(_output)
+            return _output
 
-    output = EmbeddingSim(name='Softmax')([output, embed_weights])
+        content = content_output
+        content_output = _build_block('Content', content_output, content)
+        if training:
+            query_output = _build_block('Query', query_output, content)
+
+    if training:
+        output = EmbeddingSim(name='Softmax')([query_output, embed_weights])
+    else:
+        output = content_output
     model = keras.models.Model(
-        inputs=[token_input, memory_length_input, perm_input],
+        inputs=[token_input, seg_input, memory_length_input, perm_input],
         outputs=output
     )
     return model
