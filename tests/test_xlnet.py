@@ -32,7 +32,7 @@ class TestXLNet(TestCase):
         try:
             current_path = os.path.dirname(os.path.abspath(__file__))
             visual_path = os.path.join(current_path, 'test_build_training.jpg')
-            keras.utils.vis_utils.plot_model(model, visual_path)
+            keras.utils.vis_utils.plot_model(model, visual_path, show_shapes=True)
         except Exception as e:
             pass
 
@@ -58,6 +58,6 @@ class TestXLNet(TestCase):
         try:
             current_path = os.path.dirname(os.path.abspath(__file__))
             visual_path = os.path.join(current_path, 'test_build_not_training.jpg')
-            keras.utils.vis_utils.plot_model(model, visual_path)
+            keras.utils.vis_utils.plot_model(model, visual_path, show_shapes=True)
         except Exception as e:
             pass

@@ -9,6 +9,7 @@ from keras_position_wise_feed_forward import FeedForward
 
 from .segment_bias import SegmentBias
 from .segment_embed import RelativeSegmentEmbedding
+from .permutation import PermutationMask
 from .attention import RelativePartialMultiHeadSelfAttention as Attention
 
 __all__ = [
@@ -22,6 +23,7 @@ def get_custom_objects() -> dict:
         'EmbeddingRet': EmbeddingRet,
         'EmbeddingSim': EmbeddingSim,
         'PositionalEmbedding': PositionalEmbedding,
+        'PermutationMask': PermutationMask,
         'RelativeBias': RelativeBias,
         'SegmentBias': SegmentBias,
         'RelativeSegmentEmbedding': RelativeSegmentEmbedding,
@@ -111,6 +113,10 @@ def build_xlnet(units,
         name='Embed-Pos',
     )([token_embed, memories[0]])
 
+    content_mask, query_mask = PermutationMask(
+        name='Permutation',
+    )([token_embed, memories[0]])
+
     if shared_biases:
         relative_biases = RelativeBias(
             units,
@@ -139,59 +145,69 @@ def build_xlnet(units,
             name='Embed-Segment-{}'.format(i + 1),
         )([seg_input, memories[i]])
 
-        def _build_block(name, query, content):
+        attention = Attention(
+            units=units,
+            num_head=num_head,
+            use_bias=False,
+            attention_dropout=attention_dropout,
+            name='Attention-{}'.format(i + 1),
+        )
+        if 0.0 < dropout < 1.0:
+            attention_dropout_layer = keras.layers.Dropout(
+                rate=dropout,
+                name='Attention-Dropout-{}'.format(i + 1),
+            )
+        else:
+            attention_dropout_layer = None
+        attention_add = keras.layers.Add(name='Attention-Residual-{}'.format(i + 1))
+        attention_layer_norm = LayerNormalization(name='Attention-Norm-{}'.format(i + 1))
+
+        feed_forward = FeedForward(
+            units=hidden_dim,
+            dropout_rate=dropout,
+            name='FeedForward-{}'.format(i + 1),
+        )
+        if 0.0 < dropout < 1.0:
+            feed_forward_dropout = keras.layers.Dropout(
+                rate=dropout,
+                name='FeedForward-Dropout-{}'.format(i + 1),
+            )
+        else:
+            feed_forward_dropout = None
+        feed_forward_add = keras.layers.Add(name='FeedForward-Residual-{}'.format(i + 1))
+        feed_forward_layer_norm = LayerNormalization(name='FeedForward-Normal-{}'.format(i + 1))
+
+        content = content_output
+
+        def _build_output(query, mask):
             attention_input = query
             if shared_biases:
                 context_bias, relative_bias, segment_bias = relative_biases[0], relative_biases[1], segment_biases
             else:
-                context_bias, relative_bias  = relative_biases[i][0], relative_biases[i][1]
+                context_bias, relative_bias = relative_biases[i][0], relative_biases[i][1]
                 segment_bias = segment_biases[i]
-            _output = Attention(
-                units=units,
-                num_head=num_head,
-                use_bias=False,
-                attention_dropout=attention_dropout,
-                name='Attention-{}-{}'.format(name, i + 1),
-            )([
+            _output = attention([
                 query, content, memories[i],
                 segment_embed, pos_embed,
                 context_bias, relative_bias, segment_bias,
+                mask,
             ])
-            if 0.0 < dropout < 1.0:
-                _output = keras.layers.Dropout(
-                    rate=dropout,
-                    name='Attention-{}-Dropout-{}'.format(name, i + 1),
-                )(_output)
-            _output = keras.layers.Add(
-                name='Attention-{}-Residual-{}'.format(name, i + 1),
-            )([attention_input, _output])
-            _output = LayerNormalization(
-                name='Attention-{}-Norm-{}'.format(name, i + 1)
-            )(_output)
+            if attention_dropout_layer is not None:
+                _output = attention_dropout_layer(_output)
+            _output = attention_add([attention_input, _output])
+            _output = attention_layer_norm(_output)
 
             feed_forward_input = _output
-            _output = FeedForward(
-                units=hidden_dim,
-                dropout_rate=dropout,
-                name='FeedForward-{}-{}'.format(name, i + 1),
-            )(_output)
-            if 0.0 < dropout < 1.0:
-                _output = keras.layers.Dropout(
-                    rate=dropout,
-                    name='FeedForward-Dropout-{}-{}'.format(name, i + 1),
-                )(_output)
-            _output = keras.layers.Add(
-                name='FeedForward-Residual-{}-{}'.format(name, i + 1),
-            )([feed_forward_input, _output])
-            _output = LayerNormalization(
-                name='FeedForward-Normal-{}-{}'.format(name, i + 1),
-            )(_output)
+            _output = feed_forward(_output)
+            if feed_forward_dropout is not None:
+                _output = feed_forward_dropout(_output)
+            _output = feed_forward_add([feed_forward_input, _output])
+            _output = feed_forward_layer_norm(_output)
             return _output
 
-        content = content_output
-        content_output = _build_block('Content', content_output, content)
+        content_output = _build_output(content_output, content_mask)
         if training:
-            query_output = _build_block('Query', query_output, content)
+            query_output = _build_output(query_output, query_mask)
 
     if training:
         output = EmbeddingSim(name='Softmax')([query_output, embed_weights])

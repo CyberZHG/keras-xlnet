@@ -35,7 +35,7 @@ class PermutationMask(keras.layers.Layer):
         return [(input_shape[0], seq_len, key_len)] * 2
 
     def compute_mask(self, inputs, mask=None):
-        return None, None
+        return [None, None]
 
     def call(self, inputs, training=None, **kwargs):
         inputs, memory = inputs

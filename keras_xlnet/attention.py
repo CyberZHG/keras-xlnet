@@ -130,7 +130,7 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         return input_shape[0]
 
     def call(self, inputs, mask=None, training=None):
-        inputs, content, memories, segments, relatives, bias_context, bias_relative, bias_segment = inputs
+        inputs, content, memories, segments, relatives, bias_context, bias_relative, bias_segment, permutation = inputs
         full = K.concatenate([memories, content], axis=1)      # (batch, prev_len + seq_len, units)
         w_q = K.dot(inputs, self.kernel_q)                    # (batch, seq_len, units)
         w_kv = K.dot(full, self.kernel_kv)                    # (batch, prev_len + seq_len, units * 2)
@@ -169,9 +169,7 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         att = (a_context + a_relative + a_segment) / K.sqrt(K.constant(self.units_head, dtype=K.floatx()))
         exp = K.exp(att - K.max(att, axis=-1, keepdims=True))
 
-        indices = K.expand_dims(K.arange(0, k_len), axis=0)
-        upper = K.expand_dims(K.arange(k_len - q_len, k_len), axis=-1)
-        exp *= K.expand_dims(K.cast(indices <= upper, K.floatx()), axis=0)
+        exp *= permutation
         if mask is not None and mask[0] is not None:
             mask = K.cast(mask[0], K.floatx())
             mask = K.concatenate([K.ones_like(memories[:, :, 0]), mask], axis=1)
