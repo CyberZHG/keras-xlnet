@@ -115,15 +115,13 @@ def build_xlnet(units,
                 name='Embed-Mask-Dropout'
             )(mask_embed)
 
-    memories = []
-    for i in range(num_block):
-        memories.append(Memory(
-            batch_size=batch_size,
-            memory_len=memory_len,
-            target_len=target_len,
-            output_dim=units,
-            name='Memory-Content-{}'.format(i + 1),
-        )([token_embed, memory_length_input]))
+    memories = [Memory(
+        batch_size=batch_size,
+        memory_len=memory_len,
+        target_len=target_len,
+        output_dim=units,
+        name='Memory-Content-0',
+    )([token_embed, memory_length_input])]
 
     pos_embed = PositionalEmbedding(
         output_dim=units,
@@ -150,11 +148,11 @@ def build_xlnet(units,
             relative_biases.append(RelativeBias(
                 units,
                 name='Relative-Bias-{}'.format(i + 1),
-            )(memories[i]))
+            )(memories[0]))
             segment_biases.append(SegmentBias(
                 units,
                 name='Segment-Bias-{}'.format(i + 1),
-            )(memories[i]))
+            )(memories[0]))
 
     content_output, query_output = token_embed, None
     if training:
@@ -228,6 +226,15 @@ def build_xlnet(units,
         content_output = _build_output(content_output, content_mask)
         if training:
             query_output = _build_output(query_output, query_mask)
+
+        if i < num_block - 1:
+            memories.append(Memory(
+                batch_size=batch_size,
+                memory_len=memory_len,
+                target_len=target_len,
+                output_dim=units,
+                name='Memory-Content-{}'.format(i + 1),
+            )([content_output, memory_length_input]))
 
     if training:
         output = EmbeddingSim(name='Softmax')([query_output, embed_weights])
