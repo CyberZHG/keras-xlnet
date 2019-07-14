@@ -101,14 +101,15 @@ def load_model_weights_from_checkpoint(model,
             segment_embed[i].reshape((2, units))
         ])
 
+        att_kernel_name = 'model/transformer/layer_{}/rel_attn/{}/kernel'
         model.get_layer(name='Attention-{}'.format(i + 1)).set_weights([
             np.concatenate(
                 [
-                    loader('model/transformer/layer_{}/rel_attn/q/kernel'.format(i)).reshape((units, units)),
-                    loader('model/transformer/layer_{}/rel_attn/k/kernel'.format(i)).reshape((units, units)),
-                    loader('model/transformer/layer_{}/rel_attn/v/kernel'.format(i)).reshape((units, units)),
-                    loader('model/transformer/layer_{}/rel_attn/r/kernel'.format(i)).reshape((units, units)),
-                    loader('model/transformer/layer_{}/rel_attn/o/kernel'.format(i)).reshape((units, units)),
+                    loader(att_kernel_name.format(i, 'q')).reshape((units, units)),
+                    loader(att_kernel_name.format(i, 'k')).reshape((units, units)),
+                    loader(att_kernel_name.format(i, 'v')).reshape((units, units)),
+                    loader(att_kernel_name.format(i, 'r')).reshape((units, units)),
+                    loader(att_kernel_name.format(i, 'o')).reshape((units, units)).transpose(),
                 ],
                 axis=1,
             ),

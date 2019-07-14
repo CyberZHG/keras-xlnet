@@ -120,7 +120,7 @@ def build_xlnet(units,
         memory_len=memory_len,
         target_len=target_len,
         output_dim=units,
-        name='Memory-Content-0',
+        name='Memory-0',
     )([token_embed, memory_length_input])]
 
     pos_embed = PositionalEmbedding(
@@ -183,6 +183,7 @@ def build_xlnet(units,
         feed_forward = FeedForward(
             units=hidden_dim,
             dropout_rate=dropout,
+            activation=gelu,
             name='FeedForward-{}'.format(i + 1),
         )
         if 0.0 < dropout < 1.0:
@@ -233,7 +234,7 @@ def build_xlnet(units,
                 memory_len=memory_len,
                 target_len=target_len,
                 output_dim=units,
-                name='Memory-Content-{}'.format(i + 1),
+                name='Memory-{}'.format(i + 1),
             )([content_output, memory_length_input]))
 
     if training:

@@ -169,6 +169,8 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         att = (a_context + a_relative + a_segment) / K.sqrt(K.constant(self.units_head, dtype=K.floatx()))
         exp = K.exp(att - K.max(att, axis=-1, keepdims=True))
 
+        permutation = K.tile(K.expand_dims(permutation, axis=1), [1, self.num_head, 1, 1])
+        permutation = K.reshape(permutation, (-1, q_len, k_len))
         exp *= permutation
         if mask is not None and mask[0] is not None:
             mask = K.cast(mask[0], K.floatx())
