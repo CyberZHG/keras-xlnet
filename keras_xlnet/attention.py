@@ -131,8 +131,9 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
 
     def call(self, inputs, mask=None, training=None):
         inputs, content, memories, segments, relatives, bias_context, bias_relative, bias_segment, permutation = inputs
-        full = K.concatenate([memories, content], axis=1)      # (batch, prev_len + seq_len, units)
+        full = K.concatenate([memories, content], axis=1)     # (batch, prev_len + seq_len, units)
         w_q = K.dot(inputs, self.kernel_q)                    # (batch, seq_len, units)
+
         w_kv = K.dot(full, self.kernel_kv)                    # (batch, prev_len + seq_len, units * 2)
         w_r = K.dot(relatives, self.kernel_r)                 # (batch, prev_len + seq_len, units)
         if self.use_bias:
