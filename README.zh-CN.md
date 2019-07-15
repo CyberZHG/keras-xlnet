@@ -11,7 +11,7 @@
 <!--![](https://img.shields.io/badge/keras-tf.keras/eager-blue.svg)
 ![](https://img.shields.io/badge/keras-tf.keras/2.0_beta-blue.svg)-->
 
-\[[中文](https://github.com/CyberZHG/keras-xlnet/blob/master/README.zh-CN.md)|[English](https://github.com/CyberZHG/keras-xlnet/blob/master/README.md)\]
+\[[中文](https://github.com/CyberZHG/keras-xlnet/blob/master/README.zh-CN.md)|[English](https://github.com/CyberZHG/keras-xlnet/blob/master/README.md)|[通用问题](https://github.com/CyberZHG/summary/blob/master/QA.md)\]
 
 [XLNet](https://arxiv.org/pdf/1906.08237)的非官方实现。
 

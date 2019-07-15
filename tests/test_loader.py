@@ -24,6 +24,34 @@ class TestLoader(TestCase):
         memory = K.get_value(layer.weights[0])
         return memory[:, -length:, :]
 
+    def test_load_empty_memory(self):
+        current_path = os.path.dirname(os.path.abspath(__file__))
+        checkpoint_path = os.path.join(current_path, 'test_checkpoint_empty')
+        model = load_trained_model_from_checkpoint(
+            config_path=os.path.join(checkpoint_path, 'xlnet_config.json'),
+            checkpoint_path=os.path.join(checkpoint_path, 'xlnet_model.ckpt'),
+            batch_size=2,
+            memory_len=5,
+            target_len=5,
+            in_train_phase=False,
+        )
+        set_custom_objects()
+        model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
+        model.save(model_path)
+        model = keras.models.load_model(model_path)
+        model.summary()
+
+        def _load_numpy(name):
+            return np.load(os.path.join(checkpoint_path, name + '.npy'))
+
+        input_ids = _load_numpy('input_ids')
+        seg_ids = _load_numpy('seg_ids')
+        tune_output = _load_numpy('empty_output')
+
+        inputs = [input_ids, seg_ids, np.zeros((2, 1))]
+        output = model.predict_on_batch(inputs)
+        self.assertTrue(np.allclose(tune_output, output, atol=1e-6))
+
     def test_load_not_training(self):
         current_path = os.path.dirname(os.path.abspath(__file__))
         checkpoint_path = os.path.join(current_path, 'test_checkpoint_tune')
