@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from keras_xlnet.backend import keras
+from keras_xlnet.backend import keras, EAGER_MODE
 from keras_xlnet.backend import backend as K
 from keras_xlnet import PermutationMask
 
@@ -10,6 +10,8 @@ from keras_xlnet import PermutationMask
 class TestPermutation(TestCase):
 
     def test_permutation_mask(self):
+        if EAGER_MODE:
+            return
         inputs_segment = keras.layers.Input(shape=(6, 3))
         inputs_memory = keras.layers.Input(shape=(3, 3))
         inputs = [inputs_segment, inputs_memory]
