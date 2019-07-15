@@ -133,31 +133,32 @@ def build_xlnet(units,
         name='Permutation',
     )([token_embed, memories[0]])
 
+    context_bias, relative_bias, segment_bias = None, None, None
     if shared_biases:
-        relative_biases = RelativeBias(
+        context_bias, relative_bias = RelativeBias(
             units,
             name='Relative-Bias',
         )(memories[0])
-        segment_biases = SegmentBias(
+        segment_bias = SegmentBias(
             units,
             name='Segment-Bias',
         )(memories[0])
-    else:
-        relative_biases, segment_biases = [], []
-        for i in range(num_block):
-            relative_biases.append(RelativeBias(
-                units,
-                name='Relative-Bias-{}'.format(i + 1),
-            )(memories[0]))
-            segment_biases.append(SegmentBias(
-                units,
-                name='Segment-Bias-{}'.format(i + 1),
-            )(memories[0]))
 
     content_output, query_output = token_embed, None
     if training:
         query_output = mask_embed
+
     for i in range(num_block):
+        if not shared_biases:
+            context_bias, relative_bias = RelativeBias(
+                units,
+                name='Relative-Bias-{}'.format(i + 1),
+            )(memories[i])
+            segment_bias = SegmentBias(
+                units,
+                name='Segment-Bias-{}'.format(i + 1),
+            )(memories[i])
+
         segment_embed = RelativeSegmentEmbedding(
             units=units,
             name='Embed-Segment-{}'.format(i + 1),
@@ -200,11 +201,6 @@ def build_xlnet(units,
 
         def _build_output(query, mask):
             attention_input = query
-            if shared_biases:
-                context_bias, relative_bias, segment_bias = relative_biases[0], relative_biases[1], segment_biases
-            else:
-                context_bias, relative_bias = relative_biases[i][0], relative_biases[i][1]
-                segment_bias = segment_biases[i]
             _output = attention([
                 query, content, memories[i],
                 segment_embed, pos_embed,
