@@ -16,13 +16,15 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
 
     # Input shape
         Input feature, 3D tensor with shape: `(batch_size, sequence_length, units)`.
-        Full feature, 3D tensor with shape: `(batch_size, previous_sequence_length + sequence_length, units)`.
-        Segment embedding, 3D tensor with shape: `(batch_size, sequence_length, units)`.
-        Positional embedding, 3D tensor with shape: `(batch_size, previous_sequence_length + sequence_length, units)`.
-        Memory, 3D tensor with shape: `(batch_size, previous_sequence_length, units)`.
+        Content feature, 3D tensor with shape: `(batch_size, sequence_length, units)`.
+        Memory feature, 3D tensor with shape: `(batch_size, previous_length, units)`.
+        Segment embedding, 4D tensor with shape: `(batch_size, sequence_length,
+                                                   previous_length + sequence_length, units)`.
+        Positional embedding, 3D tensor with shape: `(batch_size, previous_length + sequence_length, units)`.
         Context bias, 1D tensor with shape: `(units,)`.
         Relative bias, 1D tensor with shape: `(units,)`.
         Segment bias, 1D tensor with shape: `(units,)`.
+        Permutation mask, 3D tensor with shape: `(batch_size, sequence_length, previous_length + sequence_length)`.
 
     # Output shape
         3D tensor with shape: `(batch_size, sequence_length, units)`.

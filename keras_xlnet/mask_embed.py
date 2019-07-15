@@ -50,9 +50,10 @@ class MaskEmbedding(keras.layers.Layer):
         return input_shape[0]
 
     def compute_mask(self, inputs, mask=None):
+        output_mask = None
         if mask is not None:
-            return mask[0]
-        return None
+            output_mask = mask[0]
+        return output_mask
 
     def call(self, inputs, **kwargs):
         token_embed, query = inputs
