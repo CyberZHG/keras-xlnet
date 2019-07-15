@@ -61,8 +61,6 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         self.bias_constraint = constraints.get(bias_constraint)
 
         self.kernel, self.bias = None, None
-        self.kernel_q, self.kernel_kv, self.kernel_r, self.kernel_o = (None,) * 4
-        self.bias_q, self.bias_kv, self.bias_r, self.bias_o = (None,) * 4
         self.att_drop_layer = None
 
     def compute_mask(self, inputs, mask=None):
@@ -76,10 +74,6 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
             constraint=self.kernel_constraint,
             name='kernel',
         )
-        self.kernel_q = self.kernel[:, :self.units]
-        self.kernel_kv = self.kernel[:, self.units:self.units * 3]
-        self.kernel_r = self.kernel[:, self.units * 3:self.units * 4]
-        self.kernel_o = self.kernel[:, self.units * 4:self.units * 5]
 
         if self.use_bias:
             self.bias = self.add_weight(
@@ -89,10 +83,6 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
                 constraint=self.bias_constraint,
                 name='bias',
             )
-            self.bias_q = self.bias[:self.units]
-            self.bias_kv = self.bias[self.units:self.units * 3]
-            self.bias_r = self.bias[self.units * 3:self.units * 4]
-            self.bias_o = self.bias[self.units * 4:self.units * 5]
 
         if 0.0 < self.attention_dropout < 1.0:
             self.att_drop_layer = keras.layers.Dropout(self.attention_dropout)
@@ -132,18 +122,32 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
     def call(self, inputs, mask=None, training=None):
         inputs, content, memories, segments, relatives, bias_context, bias_relative, bias_segment, permutation = inputs
         full = K.concatenate([memories, content], axis=1)     # (batch, prev_len + seq_len, units)
-        w_q = K.dot(inputs, self.kernel_q)                    # (batch, seq_len, units)
 
-        w_kv = K.dot(full, self.kernel_kv)                    # (batch, prev_len + seq_len, units * 2)
-        w_r = K.dot(relatives, self.kernel_r)                 # (batch, prev_len + seq_len, units)
+        kernel_q = self.kernel[:, :self.units]
+        kernel_kv = self.kernel[:, self.units:self.units * 3]
+        kernel_r = self.kernel[:, self.units * 3:self.units * 4]
+        kernel_o = self.kernel[:, self.units * 4:self.units * 5]
+
+        bias_q, bias_kv, bias_r, bias_o = (None,) * 4
         if self.use_bias:
-            w_q = K.bias_add(w_q, self.bias_q)
-            w_kv = K.bias_add(w_kv, self.bias_kv)
-            w_r = K.bias_add(w_r, self.bias_r)
+            bias_q = self.bias[:self.units]
+            bias_kv = self.bias[self.units:self.units * 3]
+            bias_r = self.bias[self.units * 3:self.units * 4]
+            bias_o = self.bias[self.units * 4:self.units * 5]
+
+        w_q = K.dot(inputs, kernel_q)                    # (batch, seq_len, units)
+        w_kv = K.dot(full, kernel_kv)                    # (batch, prev_len + seq_len, units * 2)
+        w_r = K.dot(relatives, kernel_r)                 # (batch, prev_len + seq_len, units)
+        if self.use_bias:
+            w_q = K.bias_add(w_q, bias_q)
+            w_kv = K.bias_add(w_kv, bias_kv)
+            w_r = K.bias_add(w_r, bias_r)
         if self.activation is not None:
             w_q = self.activation(w_q)
             w_kv = self.activation(w_kv)
             w_r = self.activation(w_r)
+        self.t = K.identity(self.kernel)
+        self.tt = K.identity(kernel_q)
 
         w_k = w_kv[:, :, :self.units]                    # (batch, prev_len + seq_len, units)
         w_v = w_kv[:, :, self.units:]                    # (batch, prev_len + seq_len, units)
@@ -185,9 +189,9 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         w_o = K.batch_dot(att, w_v)                           # (batch * n_head, seq_len, units_head)
 
         w_o = self._reshape_from_batches(w_o)                 # (batch, seq_len, units)
-        w_o = K.dot(w_o, self.kernel_o)                       # (batch, seq_len, units)
+        w_o = K.dot(w_o, kernel_o)                       # (batch, seq_len, units)
         if self.use_bias:
-            w_o = K.bias_add(w_o, self.bias_o)
+            w_o = K.bias_add(w_o, bias_o)
         if self.activation is not None:
             w_o = self.activation(w_o)
 
