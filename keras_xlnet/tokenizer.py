@@ -27,12 +27,7 @@ class Tokenizer(object):
         self.sp = spm.SentencePieceProcessor()
         self.sp.Load(spm_path)
 
-    def encode(self, text):
-        """Encode the text.
-
-        :param text: The text.
-        :return: A list of ints represents the IDs of tokens.
-        """
+    def tokenize(self, text):
         if self.remove_spaces:
             text = ' '.join(text.strip().split())
         if self.remove_accents:
@@ -58,5 +53,16 @@ class Tokenizer(object):
                 new_pieces.extend(cur_pieces)
             else:
                 new_pieces.append(piece)
+        return new_pieces
 
-        return [self.sp.PieceToId(piece) for piece in new_pieces]
+    def encode(self, text):
+        """Encode the text.
+
+        :param text: The text.
+        :return: A list of ints represents the IDs of tokens.
+        """
+        pieces = self.tokenize(text)
+        return [self.sp.PieceToId(piece) for piece in pieces]
+
+    def decode(self, ids):
+        return self.sp.DecodeIds(ids)
