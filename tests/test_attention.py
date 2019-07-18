@@ -15,7 +15,8 @@ class TestAttention(TestCase):
         token_input = keras.layers.Input(shape=(sequence_length, units))
         content_input = keras.layers.Input(shape=(sequence_length, units))
         memory_input = keras.layers.Input(shape=(previous_length, units))
-        segment_input = keras.layers.Input(shape=(sequence_length, previous_length + sequence_length, units))
+        segment_mat_input = keras.layers.Input(shape=(sequence_length, previous_length + sequence_length, 2))
+        segment_embed_input = keras.layers.Input(shape=(2, units))
         position_input = keras.layers.Input(shape=(previous_length + sequence_length, units))
         permutation_input = keras.layers.Input(shape=(sequence_length, previous_length + sequence_length))
 
@@ -23,7 +24,8 @@ class TestAttention(TestCase):
         segment_bias = SegmentBias(units=units)(token_input)
 
         RelativePartialMultiHeadSelfAttention(units=units, num_head=3, use_bias=True)([
-            token_input, content_input, memory_input, segment_input, position_input,
+            token_input, content_input, memory_input,
+            segment_mat_input, segment_embed_input, position_input,
             relative_bias[0], relative_bias[1], segment_bias,
             permutation_input,
         ])

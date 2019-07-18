@@ -159,7 +159,7 @@ def build_xlnet(units,
                 name='Segment-Bias-{}'.format(i + 1),
             )(memories[i])
 
-        segment_embed = RelativeSegmentEmbedding(
+        segment_mat, segment_embed = RelativeSegmentEmbedding(
             units=units,
             name='Embed-Segment-{}'.format(i + 1),
         )([seg_input, memories[i]])
@@ -203,7 +203,7 @@ def build_xlnet(units,
             attention_input = query
             _output = attention([
                 query, content, memories[i],
-                segment_embed, pos_embed,
+                segment_mat, segment_embed, pos_embed,
                 context_bias, relative_bias, segment_bias,
                 mask,
             ])

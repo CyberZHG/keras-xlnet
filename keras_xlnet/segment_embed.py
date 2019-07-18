@@ -12,7 +12,8 @@ class RelativeSegmentEmbedding(keras.layers.Embedding):
         Memory, 3D tensor with shape: `(batch_size, mem_len, units)`.
 
     # Output shape
-        4D tensor with shape: `(batch_size, seq_len, mem_len + seq_len, units)`.
+        4D tensor with shape: `(batch_size, seq_len, mem_len + seq_len, 2)`.
+        2D tensor with shape: `(2, units)`.
 
     # References
         - [XLNet: Generalized Autoregressive Pretraining for Language Understanding](https://arxiv.org/pdf/1906.08237)
@@ -30,16 +31,17 @@ class RelativeSegmentEmbedding(keras.layers.Embedding):
         mem_len = None
         if segment_shape[1] is not None and memory_shape[1] is not None:
             mem_len = segment_shape[1] + memory_shape[1]
-        return segment_shape[0], segment_shape[1], mem_len, memory_shape[2]
+        return [(segment_shape[0], segment_shape[1], mem_len, 2), (2, memory_shape[2])]
 
     def compute_mask(self, inputs, mask=None):
-        return None
+        return [None, None]
 
     def call(self, inputs):
         segment, memory = inputs
         full = K.concatenate([K.zeros_like(memory[:, :, 0]), segment], axis=1)
         relative = K.not_equal(K.expand_dims(segment, axis=-1), K.expand_dims(full, axis=1))
-        return super(RelativeSegmentEmbedding, self).call(relative)
+        relative = K.one_hot(K.cast(relative, 'uint8'), 2)
+        return [relative, K.identity(self.embeddings)]
 
     def get_config(self):
         config = {

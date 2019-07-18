@@ -20,15 +20,16 @@ class TestSegmentEmbed(TestCase):
             [0.4, 0.5, 0.6],
         ])
         embed_layer.set_weights([weights])
-        func = K.function(inputs, [outputs])
+        func = K.function(inputs, outputs)
         query = [0, 1, 2, 2, 1, 0]
         key = [0, 0, 0] + query
         inputs = [np.array([query]), np.zeros((1, 3, 3))]
-        outputs = func(inputs)[0]
-        self.assertEqual((1, 6, 9, 3), outputs.shape)
+        outputs = func(inputs)
+        self.assertEqual((1, 6, 9, 2), outputs[0].shape)
         for i in range(6):
             for j in range(9):
                 if query[i] == key[j]:
-                    self.assertTrue(np.allclose(weights[0], outputs[0, i, j]))
+                    self.assertEqual([1, 0], outputs[0][0, i, j].tolist())
                 else:
-                    self.assertTrue(np.allclose(weights[1], outputs[0, i, j]))
+                    self.assertEqual([0, 1], outputs[0][0, i, j].tolist())
+        self.assertTrue(np.allclose(weights, outputs[1]))
