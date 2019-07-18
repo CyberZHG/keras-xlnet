@@ -1,4 +1,4 @@
-import tensorflow as tf
+from tensorflow.python.ops.random_ops import random_shuffle
 
 from .backend import keras
 from .backend import backend as K
@@ -45,7 +45,7 @@ class PermutationMask(keras.layers.Layer):
 
         # Build content mask with random permutation
         ranges = K.tile(K.expand_dims(K.arange(0, seq_len), axis=-1), [1, batch_size])
-        shuffled = K.in_train_phase(tf.random.shuffle(ranges), ranges, training)
+        shuffled = K.in_train_phase(random_shuffle(ranges), ranges, training)
         ranges = K.expand_dims(K.permute_dimensions(ranges, [1, 0]), axis=-1)
         shuffled = K.expand_dims(K.permute_dimensions(shuffled, [1, 0]), axis=1)
         content_mask = K.cast(ranges <= shuffled, dtype=K.floatx())
