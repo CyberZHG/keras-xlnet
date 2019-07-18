@@ -5,3 +5,4 @@ from .segment_embed import *
 from .attention import *
 from .xlnet import *
 from .loader import *
+from .tokenizer import *
