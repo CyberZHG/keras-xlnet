@@ -30,3 +30,11 @@ class TestTokenizer(TestCase):
         ids = tokenizer.encode(text)
         self.assertEqual([1266, 3512, 368, 1942], ids)
         self.assertEqual(text.lower(), tokenizer.decode(ids))
+
+    def test_re_cut(self):
+        current_path = os.path.dirname(os.path.abspath(__file__))
+        spm_path = os.path.join(current_path, 'spiece.model')
+        tokenizer = Tokenizer(spm_path)
+        text = '123,456,789.00'
+        ids = tokenizer.encode(text)
+        self.assertEqual(text, tokenizer.decode(ids))

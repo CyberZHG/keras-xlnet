@@ -6,6 +6,8 @@ __all__ = ['Tokenizer']
 
 class Tokenizer(object):
 
+    SPM_UNDERLINE = '▁'
+
     def __init__(self,
                  spm_path,
                  remove_spaces=True,
@@ -43,12 +45,9 @@ class Tokenizer(object):
         new_pieces = []
         for piece in pieces:
             if len(piece) > 1 and piece[-1] == ',' and piece[-2].isdigit():
-                cur_pieces = self.sp.EncodeAsPieces(piece[:-1].replace('▁', ''))
-                if piece[0] != '▁' and cur_pieces[0][0] == '▁':
-                    if len(cur_pieces[0]) == 1:
-                        cur_pieces = cur_pieces[1:]
-                    else:
-                        cur_pieces[0] = cur_pieces[0][1:]
+                cur_pieces = self.sp.EncodeAsPieces(piece[:-1].replace(self.SPM_UNDERLINE, ''))
+                if piece[0] != self.SPM_UNDERLINE and cur_pieces[0][0] == self.SPM_UNDERLINE:
+                    cur_pieces[0] = cur_pieces[0][1:]
                 cur_pieces.append(piece[-1])
                 new_pieces.extend(cur_pieces)
             else:
