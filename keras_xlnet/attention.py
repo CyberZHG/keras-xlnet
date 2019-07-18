@@ -154,7 +154,7 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
 
         w_k = w_kv[:, :, :self.units]                    # (batch, prev_len + seq_len, units)
         w_v = w_kv[:, :, self.units:]                    # (batch, prev_len + seq_len, units)
-        q_len, k_len = K.shape(w_q)[1], K.shape(w_k)[1]
+        batch_size, q_len, k_len = K.shape(inputs)[0], K.shape(w_q)[1], K.shape(w_k)[1]
 
         w_qc = K.bias_add(w_q, bias_context)
         w_qc = self._reshape_to_batches(w_qc)            # (batch * n_head, seq_len, units_head)
@@ -171,6 +171,7 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         w_qs = K.reshape(w_qs, (-1, q_len, self.num_head, self.units_head))
         w_qs = K.permute_dimensions(w_qs, (2, 0, 1, 3))               # (n_head, batch, seq_len, units_head)
         segment_embed = K.reshape(K.transpose(segment_embed), (self.num_head, 1, self.units_head, 2))
+        segment_embed = K.tile(segment_embed, (1, batch_size, 1, 1))
         a_segment = K.batch_dot(w_qs, segment_embed, axes=(3, 2))     # (n_head, batch, seq_len, 2)
         a_segment = K.permute_dimensions(a_segment, (1, 2, 3, 0))     # (batch, seq_len, 2, n_head)
         a_segment = K.batch_dot(segment_mat, a_segment, axes=(3, 2))  # (batch, seq_len, prev_len + seq_len, n_head)
