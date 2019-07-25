@@ -6,3 +6,4 @@ from .attention import *
 from .xlnet import *
 from .loader import *
 from .tokenizer import *
+from .pretrained import *
