@@ -34,6 +34,7 @@ class TestLoader(TestCase):
             memory_len=5,
             target_len=5,
             in_train_phase=False,
+            mask_index=0,
         )
         set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
@@ -62,6 +63,7 @@ class TestLoader(TestCase):
             memory_len=5,
             target_len=5,
             in_train_phase=False,
+            mask_index=0,
         )
         set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
@@ -98,6 +100,7 @@ class TestLoader(TestCase):
             memory_len=5,
             target_len=5,
             in_train_phase=True,
+            mask_index=0,
         )
         set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())

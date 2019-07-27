@@ -3,3 +3,4 @@ Keras
 sentencepiece
 keras-transformer>=0.28.0
 keras-transformer-xl>=0.10.0
+keras-trans-mask>=0.3.0

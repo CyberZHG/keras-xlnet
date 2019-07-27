@@ -21,7 +21,8 @@ def build_model_from_config(config_path,
                             batch_size,
                             memory_len,
                             target_len,
-                            in_train_phase):
+                            in_train_phase,
+                            **kwargs):
     """Build the model from config file.
 
     :param config_path: The path to the JSON configuration file.
@@ -47,7 +48,7 @@ def build_model_from_config(config_path,
         attention_dropout=0.0,
         clamp_len=None,
         shared_biases=not config['untie_r'],
-    )
+        **kwargs)
     return model, config
 
 
@@ -140,7 +141,8 @@ def load_trained_model_from_checkpoint(config_path,
                                        batch_size,
                                        memory_len,
                                        target_len,
-                                       in_train_phase=False):
+                                       in_train_phase=False,
+                                       **kwargs):
     """Load trained official model from checkpoint.
 
     :param config_path: The path to the JSON configuration file.
@@ -157,7 +159,7 @@ def load_trained_model_from_checkpoint(config_path,
         memory_len=memory_len,
         target_len=target_len,
         in_train_phase=in_train_phase,
-    )
+        **kwargs)
     load_model_weights_from_checkpoint(
         model=model,
         config=config,

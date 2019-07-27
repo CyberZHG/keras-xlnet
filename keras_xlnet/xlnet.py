@@ -1,11 +1,13 @@
 from .backend import keras
 
 from keras_embed_sim import EmbeddingRet, EmbeddingSim
+from keras_trans_mask import CreateMask, RestoreMask
 from keras_transformer import gelu
 from keras_transformer_xl import RelativeBias, Memory, PositionalEmbedding
 from keras_layer_normalization import LayerNormalization
 from keras_position_wise_feed_forward import FeedForward
 
+from .tokenizer import Tokenizer
 from .segment_bias import SegmentBias
 from .segment_embed import RelativeSegmentEmbedding
 from .permutation import PermutationMask
@@ -22,6 +24,8 @@ def get_custom_objects() -> dict:
         'gelu': gelu,
         'EmbeddingRet': EmbeddingRet,
         'EmbeddingSim': EmbeddingSim,
+        'CreateMask': CreateMask,
+        'RestoreMask': RestoreMask,
         'PositionalEmbedding': PositionalEmbedding,
         'PermutationMask': PermutationMask,
         'MaskEmbedding': MaskEmbedding,
@@ -49,6 +53,7 @@ def build_xlnet(units,
                 batch_size,
                 memory_len,
                 target_len,
+                mask_index=Tokenizer.SYM_PAD,
                 dropout=0.0,
                 attention_dropout=0.0,
                 clamp_len=None,
@@ -64,6 +69,7 @@ def build_xlnet(units,
     :param batch_size: Maximum batch size.
     :param memory_len: The maximum length of memories.
     :param target_len: The length of prediction block.
+    :param mask_index: The index of padding.
     :param dropout: General dropout rate.
     :param attention_dropout: Dropout rate inside attention layer.
     :param clamp_len: The maximum value of relative position.
@@ -94,9 +100,15 @@ def build_xlnet(units,
     token_embed, embed_weights = EmbeddingRet(
         input_dim=num_token,
         output_dim=units,
-        mask_zero=True,
+        mask_zero=mask_index == 0,
         name='Embed-Token',
     )(token_input)
+    if mask_index is not None and mask_index != 0:
+        masking = CreateMask(
+            mask_value=mask_index,
+            name='Masking',
+        )(token_input)
+        token_embed = RestoreMask(name='Embed-Token-Masked')([token_embed, masking])
     if training:
         mask_embed = MaskEmbedding(
             units=units,
