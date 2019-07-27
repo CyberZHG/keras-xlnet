@@ -61,3 +61,24 @@ class TestXLNet(TestCase):
             keras.utils.vis_utils.plot_model(model, visual_path, show_shapes=True)
         except Exception as e:
             pass
+
+    def test_fit_batch_changes(self):
+        model = build_xlnet(
+            units=4,
+            training=False,
+            num_token=2,
+            num_block=1,
+            num_head=1,
+            hidden_dim=4,
+            batch_size=4,
+            memory_len=0,
+            target_len=5,
+        )
+        model.compile('adam', 'mse')
+        model.summary()
+
+        def gen():
+            while True:
+                yield [np.ones((4, 5)), np.zeros((4, 5)), np.zeros((4, 1))], np.zeros((4, 5, 4))
+                yield [np.ones((3, 5)), np.zeros((3, 5)), np.zeros((3, 1))], np.zeros((3, 5, 4))
+        model.fit_generator(gen(), steps_per_epoch=2)

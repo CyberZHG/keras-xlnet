@@ -2,4 +2,4 @@ numpy
 Keras
 sentencepiece
 keras-transformer>=0.28.0
-keras-transformer-xl>=0.8.0
+keras-transformer-xl>=0.10.0
