@@ -9,6 +9,10 @@ __all__ = ['PermutationMask']
 class PermutationMask(keras.layers.Layer):
     """Generate random permutation masks during training.
 
+    # Arguments
+        enabled: boolean. Whether to enable permutation in training phase.
+        directional: boolean. Uni-direction if it is True, bi-direction if it is False.
+
     # Input shape
         Inputs, 3D tensor with shape: `(batch_size, seq_len, units)`.
         Memory, 3D tensor with shape: `(batch_size, mem_len, units)`.
@@ -21,9 +25,11 @@ class PermutationMask(keras.layers.Layer):
         - [XLNet: Generalized Autoregressive Pretraining for Language Understanding](https://arxiv.org/pdf/1906.08237)
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, enabled=True, directional=True, **kwargs):
         super(PermutationMask, self).__init__(**kwargs)
         self.supports_masking = True
+        self.enabled = enabled
+        self.directional = directional
 
     def compute_output_shape(self, input_shape):
         input_shape, memory_shape = input_shape
@@ -45,7 +51,17 @@ class PermutationMask(keras.layers.Layer):
 
         # Build content mask with random permutation
         ranges = K.tile(K.expand_dims(K.arange(0, seq_len), axis=-1), [1, batch_size])
-        shuffled = K.in_train_phase(random_shuffle(ranges), ranges, training)
+        if self.enabled:
+            shuffle = random_shuffle(ranges)
+        else:
+            shuffle = ranges
+        if self.directional:
+            shuffled = K.in_train_phase(shuffle, ranges, training)
+        else:
+            if self.enabled:
+                shuffled = K.in_train_phase(shuffle, ranges + seq_len, training)
+            else:
+                shuffled = ranges + seq_len
         ranges = K.expand_dims(K.permute_dimensions(ranges, [1, 0]), axis=-1)
         shuffled = K.expand_dims(K.permute_dimensions(shuffled, [1, 0]), axis=1)
         content_mask = K.cast(ranges <= shuffled, dtype=K.floatx())
@@ -62,3 +78,11 @@ class PermutationMask(keras.layers.Layer):
             K.permute_dimensions(content_mask, [0, 2, 1]),
             K.permute_dimensions(query_mask, [0, 2, 1]),
         ]
+
+    def get_config(self):
+        config = {
+            'enabled': self.enabled,
+            'directional': self.directional,
+        }
+        base_config = super(PermutationMask, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))

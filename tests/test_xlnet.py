@@ -49,6 +49,7 @@ class TestXLNet(TestCase):
             target_len=5,
             dropout=0.1,
             attention_dropout=0.1,
+            attention_type='bi',
         )
         set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
@@ -73,6 +74,8 @@ class TestXLNet(TestCase):
             batch_size=4,
             memory_len=0,
             target_len=5,
+            permute=True,
+            attention_type='bi',
         )
         model.compile('adam', 'mse')
         model.summary()

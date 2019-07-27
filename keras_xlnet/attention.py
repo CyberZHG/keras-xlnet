@@ -190,7 +190,7 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
             mask = K.concatenate([K.ones_like(memories[:, :, 0]), mask], axis=1)
             exp *= K.expand_dims(self._reshape_mask(mask), axis=1)
 
-        att = exp / K.sum(exp, axis=-1, keepdims=True)
+        att = exp / (K.sum(exp, axis=-1, keepdims=True) + K.epsilon())
         if self.att_drop_layer is not None:
             att = self.att_drop_layer(att, training=training)
         w_v = self._reshape_to_batches(w_v)                   # (batch * n_head, prev_len + seq_len, units_head)

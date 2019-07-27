@@ -53,9 +53,11 @@ def build_xlnet(units,
                 batch_size,
                 memory_len,
                 target_len,
+                permute=None,
                 mask_index=Tokenizer.SYM_PAD,
                 dropout=0.0,
                 attention_dropout=0.0,
+                attention_type='uni',
                 clamp_len=None,
                 shared_biases=True):
     """Build XLNet.
@@ -69,13 +71,18 @@ def build_xlnet(units,
     :param batch_size: Maximum batch size.
     :param memory_len: The maximum length of memories.
     :param target_len: The length of prediction block.
+    :param permute: Whether to enable permutation.
     :param mask_index: The index of padding.
     :param dropout: General dropout rate.
     :param attention_dropout: Dropout rate inside attention layer.
+    :param attention_type: 'uni' or 'bi'.
     :param clamp_len: The maximum value of relative position.
     :param shared_biases: Whether to use the same biases for all layers.
     :return: The built model.
     """
+    if permute is None:
+        permute = training
+
     token_input = keras.layers.Input(
         shape=(target_len,),
         name='Input-Token',
@@ -142,6 +149,8 @@ def build_xlnet(units,
     )([token_embed, memories[0]])
 
     content_mask, query_mask = PermutationMask(
+        enabled=permute,
+        directional=attention_type == 'uni',
         name='Permutation',
     )([token_embed, memories[0]])
 
