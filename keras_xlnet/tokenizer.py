@@ -8,6 +8,16 @@ class Tokenizer(object):
 
     SPM_UNDERLINE = '▁'
 
+    SYM_UNK = 0
+    SYM_BOS = 1
+    SYM_EOS = 2
+    SYM_CLS = 3
+    SYM_SEP = 4
+    SYM_PAD = 5
+    SYM_MASK = 6
+    SYM_EOD = 7
+    SYM_EOP = 9
+
     def __init__(self,
                  spm_path,
                  remove_spaces=True,
