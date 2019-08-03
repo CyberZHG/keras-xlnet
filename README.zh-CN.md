@@ -13,7 +13,7 @@
 
 \[[中文](https://github.com/CyberZHG/keras-xlnet/blob/master/README.zh-CN.md)|[English](https://github.com/CyberZHG/keras-xlnet/blob/master/README.md)|[通用问题](https://github.com/CyberZHG/summary/blob/master/QA.md)\]
 
-[XLNet](https://arxiv.org/pdf/1906.08237)的非官方实现。
+[XLNet](https://arxiv.org/pdf/1906.08237)的非官方实现。[嵌入提取](demo/extract/token_embeddings.py)和[有记忆的嵌入提取](demo/extract/token_embeddings_with_memory.py)展示了如何加载预训练检查点并得到transformer的输出特征。
 
 ## 安装
 
@@ -22,6 +22,24 @@ pip install keras-xlnet
 ```
 
 ## 使用
+
+### GLUE微调
+
+点击任务名可以查看训练样例：
+
+|任务名                           |指标                          |验证集上大致结果|
+|:-------------------------------|:----------------------------:|----:|
+|[CoLA](demo/GLUE/CoLA/cola.py)  |Matthew Corr.                 |52   |
+|[SST-2](demo/GLUE/SST-2/sst2.py)|Accuracy                      |93   |
+|[MRPC](demo/GLUE/MRPC/mrpc.py)  |Accuracy/F1                   |86/89|
+|[STS-B](demo/GLUE/STS-B/stsb.py)|Pearson Corr. / Spearman Corr.|86/87|
+|[QQP](demo/GLUE/QQP/qqp.py)     |Accuracy/F1                   |90/86|
+|[MNLI](demo/GLUE/MNLI/mnli.py)  |Accuracy                      |84/84|
+|[QNLI](demo/GLUE/QNLI/qnli.py)  |Accuracy                      |86   |
+|[RTE](demo/GLUE/RTE/rte.py)     |Accuracy                      |64   |
+|[WNLI](demo/GLUE/WNLI/wnli.py)  |Accuracy                      |56   |
+
+（注意：WNLI数据集上只输出了0，不是一个正常结果）
 
 ### 加载预训练检查点
 
@@ -46,6 +64,8 @@ model.summary()
 参数`batch_size`、`memory_len`、`target_len`用于初始化记忆单元，代表最大尺寸，实际属于可以小于对应数值。如果`in_train_phase`是`True`会返回一个用于训练语言模型的模型，否则返回一个用于fine-tuning的模型。
 
 ### 关于输入输出
+
+**注意**：依赖记忆时输入有序，一定不能打乱输入顺序，`fit`或`fit_generator`的`shuffle`应该为`False`。
 
 #### `in_train_phase`是`False`
 

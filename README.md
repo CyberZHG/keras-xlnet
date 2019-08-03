@@ -13,7 +13,7 @@
 
 \[[中文](https://github.com/CyberZHG/keras-xlnet/blob/master/README.zh-CN.md)|[English](https://github.com/CyberZHG/keras-xlnet/blob/master/README.md)\]
 
-Unofficial implementation of [XLNet](https://arxiv.org/pdf/1906.08237).
+Unofficial implementation of [XLNet](https://arxiv.org/pdf/1906.08237). [Embedding extraction](demo/extract/token_embeddings.py) and [embedding extract with memory](demo/extract/token_embeddings_with_memory.py) show how to get the results of the last transformer layer using pre-trained checkpoints.
 
 ## Install
 
@@ -22,6 +22,24 @@ pip install keras-xlnet
 ```
 
 ## Usage
+
+### Fine-tuning on GLUE
+
+Click the task name to see the demos:
+
+|Task Name                       |Metrics                       |Approximate Results on Dev Set|
+|:-------------------------------|:----------------------------:|----:|
+|[CoLA](demo/GLUE/CoLA/cola.py)  |Matthew Corr.                 |52   |
+|[SST-2](demo/GLUE/SST-2/sst2.py)|Accuracy                      |93   |
+|[MRPC](demo/GLUE/MRPC/mrpc.py)  |Accuracy/F1                   |86/89|
+|[STS-B](demo/GLUE/STS-B/stsb.py)|Pearson Corr. / Spearman Corr.|86/87|
+|[QQP](demo/GLUE/QQP/qqp.py)     |Accuracy/F1                   |90/86|
+|[MNLI](demo/GLUE/MNLI/mnli.py)  |Accuracy                      |84/84|
+|[QNLI](demo/GLUE/QNLI/qnli.py)  |Accuracy                      |86   |
+|[RTE](demo/GLUE/RTE/rte.py)     |Accuracy                      |64   |
+|[WNLI](demo/GLUE/WNLI/wnli.py)  |Accuracy                      |56   |
+
+(Only 0s are predicted in WNLI dataset)
 
 ### Load Pretrained Checkpoints
 
@@ -46,6 +64,8 @@ model.summary()
 Arguments `batch_size`, `memory_len` and `target_len` are maximum sizes used for initialization of memories. The model used for training a language model is returned if `in_train_phase` is `True`, otherwise a model used for fine-tuning will be returned.
 
 ### About I/O
+
+**Note that** `shuffle` should be `False` in either `fit` or `fit_generator` if memories are used. 
 
 #### `in_train_phase` is `False`
 

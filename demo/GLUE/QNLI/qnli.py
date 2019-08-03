@@ -42,7 +42,7 @@ class DataSequence(keras.utils.Sequence):
 
 
 def generate_sequence(path):
-    tokens, classes = [], []
+    tokens, segments, classes = [], [], []
     df = pd.read_csv(path, sep='\t', error_bad_lines=False)
     for _, row in df.iterrows():
         text_a, text_b, cls = row['question'], row['sentence'], row['label']
@@ -50,12 +50,13 @@ def generate_sequence(path):
             continue
         encoded_a, encoded_b = tokenizer.encode(text_a)[:20], tokenizer.encode(text_b)[:77]
         encoded = encoded_a + [tokenizer.SYM_SEP] + encoded_b + [tokenizer.SYM_SEP]
+        segment = [0] * (len(encoded_a) + 1) + [1] * (len(encoded_b) + 1) + [2]
         encoded = [tokenizer.SYM_PAD] * (SEQ_LEN - 1 - len(encoded)) + encoded + [tokenizer.SYM_CLS]
+        segment = [-1] * (SEQ_LEN - len(segment)) + segment
         tokens.append(encoded)
+        segments.append(segment)
         classes.append(CLASSES[cls])
-    tokens, classes = np.array(tokens), np.array(classes)
-    segments = np.zeros_like(tokens)
-    segments[:, -1] = 1
+    tokens, segments, classes = np.array(tokens), np.array(segments), np.array(classes)
     lengths = np.zeros_like(tokens[:, :1])
     return DataSequence([tokens, segments, lengths], classes)
 
@@ -100,7 +101,7 @@ model.fit_generator(
     generator=train_seq,
     validation_data=dev_seq,
     epochs=EPOCH,
-    callbacks=[keras.callbacks.EarlyStopping(monitor='val_loss', patience=2)],
+    callbacks=[keras.callbacks.EarlyStopping(monitor='val_sparse_categorical_accuracy', patience=5)],
 )
 
 model.save_weights(MODEL_NAME)
