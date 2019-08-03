@@ -3,11 +3,12 @@ from .backend import keras
 from keras_embed_sim import EmbeddingRet, EmbeddingSim
 from keras_trans_mask import CreateMask, RestoreMask
 from keras_transformer import gelu
-from keras_transformer_xl import RelativeBias, Memory, PositionalEmbedding
+from keras_transformer_xl import RelativeBias, Memory
 from keras_layer_normalization import LayerNormalization
 from keras_position_wise_feed_forward import FeedForward
 
 from .tokenizer import Tokenizer
+from .position_embed import PositionalEmbedding
 from .segment_bias import SegmentBias
 from .segment_embed import RelativeSegmentEmbedding
 from .permutation import PermutationMask
