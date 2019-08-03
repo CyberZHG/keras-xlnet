@@ -5,7 +5,7 @@ from unittest import TestCase
 import numpy as np
 
 from keras_xlnet.backend import keras
-from keras_xlnet import build_xlnet, set_custom_objects
+from keras_xlnet import build_xlnet, set_custom_objects, ATTENTION_TYPE_BI
 
 
 class TestXLNet(TestCase):
@@ -49,7 +49,7 @@ class TestXLNet(TestCase):
             target_len=5,
             dropout=0.1,
             attention_dropout=0.1,
-            attention_type='bi',
+            attention_type=ATTENTION_TYPE_BI,
         )
         set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
@@ -75,7 +75,8 @@ class TestXLNet(TestCase):
             memory_len=0,
             target_len=5,
             permute=True,
-            attention_type='bi',
+            attention_type=ATTENTION_TYPE_BI,
+            clamp_len=100,
         )
         model.compile('adam', 'mse')
         model.summary()

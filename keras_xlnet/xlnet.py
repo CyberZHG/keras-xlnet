@@ -16,8 +16,12 @@ from .mask_embed import MaskEmbedding
 from .attention import RelativePartialMultiHeadSelfAttention as Attention
 
 __all__ = [
+    'ATTENTION_TYPE_UNI', 'ATTENTION_TYPE_BI',
     'get_custom_objects', 'set_custom_objects', 'build_xlnet',
 ]
+
+ATTENTION_TYPE_UNI = 'uni'
+ATTENTION_TYPE_BI = 'bi'
 
 
 def get_custom_objects() -> dict:
@@ -146,6 +150,7 @@ def build_xlnet(units,
     pos_embed = PositionalEmbedding(
         output_dim=units,
         clamp_len=clamp_len,
+        directional=attention_type == 'uni',
         name='Embed-Pos',
     )([token_embed, memories[0]])
 

@@ -118,7 +118,7 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         x = K.reshape(x, (batch_size, k_len, q_len))           # (batch * n_head, prev_len + seq_len + 1, seq_len)
         x = x[:, 1:, :]                                        # (batch * n_head, prev_len + seq_len, seq_len)
         x = K.reshape(x, (batch_size, q_len, k_len - 1))       # (batch * n_head, seq_len, prev_len + seq_len)
-        x = K.slice(x, (0, 0, 0), (-1, -1, key_len_expected))  # (batch * n_head, seq_len, key_len_expected)
+        x = tf.slice(x, (0, 0, 0), (-1, -1, key_len_expected))  # (batch * n_head, seq_len, key_len_expected)
         return x
 
     def compute_output_shape(self, input_shape):

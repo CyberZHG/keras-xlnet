@@ -9,6 +9,8 @@ class PositionalEmbedding(keras.layers.Layer):
 
     # Arguments
         output_dim: int >= 0. Dimension of the embedding. Should be even.
+        clamp_len: int > 0. Maximum length of positions.
+        directional: boolean. Whether the input is directional.
 
     # Input shape
         2D tensor with shape: `(batch_size, sequence_length)`.
@@ -21,11 +23,12 @@ class PositionalEmbedding(keras.layers.Layer):
         - [Transformer-XL](https://arxiv.org/pdf/1901.02860.pdf)
     """
 
-    def __init__(self, output_dim, clamp_len=None, **kwargs):
+    def __init__(self, output_dim, clamp_len=None, directional=True, **kwargs):
         super(PositionalEmbedding, self).__init__(**kwargs)
         self.supports_masking = True
         self.output_dim = output_dim
         self.clamp_len = clamp_len
+        self.directional = directional
 
     def compute_output_shape(self, input_shape):
         input_shape, memory_shape = input_shape
@@ -40,9 +43,13 @@ class PositionalEmbedding(keras.layers.Layer):
         return mask[0]
 
     def call(self, inputs, **kwargs):
-        length = K.shape(inputs[0])[1] + K.shape(inputs[1])[1]
+        q_len, m_len = K.shape(inputs[0])[1], K.shape(inputs[1])[1]
+        k_len = q_len + m_len
+        start, stop = k_len, -1
+        if not self.directional:
+            stop = -q_len
         inputs = K.tile(
-            K.expand_dims(K.arange(length, -1, -1, dtype=K.floatx()), axis=0),
+            K.expand_dims(K.arange(start, stop, -1, dtype=K.floatx()), axis=0),
             [K.shape(inputs[0])[0], 1],
         )
         if self.clamp_len is not None:
@@ -58,6 +65,7 @@ class PositionalEmbedding(keras.layers.Layer):
         config = {
             'output_dim': self.output_dim,
             'clamp_len': self.clamp_len,
+            'directional': self.directional,
         }
         base_config = super(PositionalEmbedding, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
