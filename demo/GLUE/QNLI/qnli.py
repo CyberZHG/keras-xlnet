@@ -8,10 +8,15 @@ from keras_bert.layers import Extract
 from keras_xlnet import PretrainedList, get_pretrained_paths
 from keras_xlnet import Tokenizer, load_trained_model_from_checkpoint, ATTENTION_TYPE_BI
 
-EPOCH = 5
+EPOCH = 10
 BATCH_SIZE = 16
 SEQ_LEN = 100
-MODEL_NAME = 'QQP.h5'
+MODEL_NAME = 'QNLI.h5'
+
+CLASSES = {
+    'not_entailment': 0,
+    'entailment': 1,
+}
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 train_path = os.path.join(current_path, 'train.tsv')
@@ -40,14 +45,14 @@ def generate_sequence(path):
     tokens, classes = [], []
     df = pd.read_csv(path, sep='\t', error_bad_lines=False)
     for _, row in df.iterrows():
-        text_a, text_b, cls = row['question1'], row['question2'], row['is_duplicate']
-        if not isinstance(text_a, str) or not isinstance(text_b, str) or cls not in [0.0, 1.0]:
+        text_a, text_b, cls = row['question'], row['sentence'], row['label']
+        if not isinstance(text_a, str) or not isinstance(text_b, str) or cls not in CLASSES:
             continue
-        encoded_a, encoded_b = tokenizer.encode(text_a)[:48], tokenizer.encode(text_b)[:49]
+        encoded_a, encoded_b = tokenizer.encode(text_a)[:20], tokenizer.encode(text_b)[:77]
         encoded = encoded_a + [tokenizer.SYM_SEP] + encoded_b + [tokenizer.SYM_SEP]
         encoded = [tokenizer.SYM_PAD] * (SEQ_LEN - 1 - len(encoded)) + encoded + [tokenizer.SYM_CLS]
         tokens.append(encoded)
-        classes.append(int(cls))
+        classes.append(CLASSES[cls])
     tokens, classes = np.array(tokens), np.array(classes)
     segments = np.zeros_like(tokens)
     segments[:, -1] = 1
@@ -121,6 +126,3 @@ print('[{}, {}]'.format(tp, fp))
 print('[{}, {}]'.format(fn, tn))
 
 print('Accuracy: %.2f' % (100.0 * (tp + tn) / len(results)))
-print('Precision: %.2f' % (100.0 * tp / (tp + fp)))
-print('Recall: %.2f' % (100.0 * tp / (tp + fn)))
-print('F1-Score: %.2f' % (100.0 * (2.0 * tp) / (2.0 * tp + fp + fn)))
