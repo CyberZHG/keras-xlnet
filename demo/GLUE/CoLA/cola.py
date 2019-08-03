@@ -116,8 +116,6 @@ print('[{}, {}]'.format(tp, fp))
 print('[{}, {}]'.format(fn, tn))
 
 print('Accuracy: %.4f' % ((tp + tn) / (tp + fp + fn + tn)))
-# About 80%
 
 mcc = (tp * tn - fp * fn) / np.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn) + K.epsilon())
 print('MCC: %.4f' % mcc)
-# About 52

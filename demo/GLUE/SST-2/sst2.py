@@ -118,4 +118,3 @@ print('[{}, {}]'.format(tp, fp))
 print('[{}, {}]'.format(fn, tn))
 
 print('Accuracy: %.2f' % (100.0 * (tp + tn) / len(results)))
-# About 93%
