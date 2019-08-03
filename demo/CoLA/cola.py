@@ -3,18 +3,14 @@ import os
 import numpy as np
 
 from keras_xlnet.backend import keras
+from keras_xlnet.backend import backend as K
 from keras_bert.layers import Extract
-from keras_xlnet import PretrainedList, get_pretrained_paths
-from keras_xlnet import Tokenizer, load_trained_model_from_checkpoint, ATTENTION_TYPE_BI
+from keras_xlnet import PretrainedList, get_pretrained_paths, Tokenizer, load_trained_model_from_checkpoint
 
 EPOCH = 10
 BATCH_SIZE = 64
-SEQ_LEN = 50
-MODEL_NAME = 'SST-2.h5'
-
-current_path = os.path.dirname(os.path.abspath(__file__))
-train_path = os.path.join(current_path, 'train.tsv')
-dev_path = os.path.join(current_path, 'dev.tsv')
+SEQ_LEN = 32
+MODEL_NAME = 'CoLA.h5'
 
 
 # Load pretrained model
@@ -27,7 +23,7 @@ model = load_trained_model_from_checkpoint(
     memory_len=0,
     target_len=SEQ_LEN,
     in_train_phase=False,
-    attention_type=ATTENTION_TYPE_BI,
+    attention_type='bi',
 )
 
 
@@ -58,14 +54,16 @@ class DataSequence(keras.utils.Sequence):
 def generate_sequence(path):
     tokens, classes = [], []
     with open(path) as reader:
-        reader.readline()
         for line in reader:
             line = line.strip()
             parts = line.split('\t')
-            encoded = tokenizer.encode(parts[0])[:SEQ_LEN - 1]
+            encoded = tokenizer.encode(parts[-1])[:SEQ_LEN - 1]
             encoded = [tokenizer.SYM_PAD] * (SEQ_LEN - 1 - len(encoded)) + encoded + [tokenizer.SYM_CLS]
             tokens.append(encoded)
-            classes.append(int(parts[1], 10))
+            if parts[1] == '0':
+                classes.append(1)
+            else:
+                classes.append(0)
     tokens, classes = np.array(tokens), np.array(classes)
     segments = np.zeros_like(tokens)
     segments[:, -1] = 1
@@ -74,8 +72,8 @@ def generate_sequence(path):
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-train_seq = generate_sequence(train_path)
-dev_seq = generate_sequence(dev_path)
+train_seq = generate_sequence(os.path.join(current_path, 'train.tsv'))
+dev_seq = generate_sequence(os.path.join(current_path, 'dev.tsv'))
 
 
 # Fit model
@@ -83,7 +81,7 @@ if os.path.exists(MODEL_NAME):
     model.load_weights(MODEL_NAME)
 
 model.compile(
-    optimizer=keras.optimizers.Adam(lr=3e-5),
+    optimizer=keras.optimizers.Adam(lr=2.5e-5),
     loss='sparse_categorical_crossentropy',
     metrics=['sparse_categorical_accuracy'],
 )
@@ -92,7 +90,7 @@ model.fit_generator(
     generator=train_seq,
     validation_data=dev_seq,
     epochs=EPOCH,
-    callbacks=[keras.callbacks.EarlyStopping(monitor='val_loss', patience=2)],
+    callbacks=[keras.callbacks.EarlyStopping(monitor='val_sparse_categorical_accuracy', patience=3)],
 )
 
 model.save_weights(MODEL_NAME)
@@ -117,5 +115,9 @@ print('Confusion:')
 print('[{}, {}]'.format(tp, fp))
 print('[{}, {}]'.format(fn, tn))
 
-print('Accuracy: %.2f' % (100.0 * (tp + tn) / len(results)))
-# About 93%
+print('Accuracy: %.4f' % ((tp + tn) / (tp + fp + fn + tn)))
+# About 80%
+
+mcc = (tp * tn - fp * fn) / np.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn) + K.epsilon())
+print('MCC: %.4f' % mcc)
+# About 52
