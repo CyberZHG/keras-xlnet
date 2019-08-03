@@ -115,9 +115,9 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
     @staticmethod
     def _relative_shift(x, key_len_expected=-1):
         batch_size, q_len, k_len = K.shape(x)[0], K.shape(x)[1], K.shape(x)[2]
-        x = K.reshape(x, (batch_size, k_len, q_len))           # (batch * n_head, prev_len + seq_len + 1, seq_len)
-        x = x[:, 1:, :]                                        # (batch * n_head, prev_len + seq_len, seq_len)
-        x = K.reshape(x, (batch_size, q_len, k_len - 1))       # (batch * n_head, seq_len, prev_len + seq_len)
+        x = K.reshape(x, (batch_size, k_len, q_len))            # (batch * n_head, prev_len + seq_len + 1, seq_len)
+        x = x[:, 1:, :]                                         # (batch * n_head, prev_len + seq_len, seq_len)
+        x = K.reshape(x, (batch_size, q_len, k_len - 1))        # (batch * n_head, seq_len, prev_len + seq_len)
         x = tf.slice(x, (0, 0, 0), (-1, -1, key_len_expected))  # (batch * n_head, seq_len, key_len_expected)
         return x
 
@@ -201,7 +201,7 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         w_o = K.batch_dot(att, w_v)                           # (batch * n_head, seq_len, units_head)
 
         w_o = self._reshape_from_batches(w_o)                 # (batch, seq_len, units)
-        w_o = K.dot(w_o, kernel_o)                       # (batch, seq_len, units)
+        w_o = K.dot(w_o, kernel_o)                            # (batch, seq_len, units)
         if self.use_bias:
             w_o = K.bias_add(w_o, bias_o)
         if self.activation is not None:
