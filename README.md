@@ -13,7 +13,7 @@
 
 \[[中文](https://github.com/CyberZHG/keras-xlnet/blob/master/README.zh-CN.md)|[English](https://github.com/CyberZHG/keras-xlnet/blob/master/README.md)\]
 
-Unofficial implementation of [XLNet](https://arxiv.org/pdf/1906.08237). [Embedding extraction](demo/extract/token_embeddings.py) and [embedding extract with memory](demo/extract/token_embeddings_with_memory.py) show how to get the results of the last transformer layer using pre-trained checkpoints.
+Unofficial implementation of [XLNet](https://arxiv.org/pdf/1906.08237). [Embedding extraction](demo/extract/token_embeddings.py) and [embedding extract with memory](demo/extract/token_embeddings_with_memory.py) show how to get the outputs of the last transformer layer using pre-trained checkpoints.
 
 ## Install
 
@@ -25,7 +25,7 @@ pip install keras-xlnet
 
 ### Fine-tuning on GLUE
 
-Click the task name to see the demos:
+Click the task name to see the demos with base model:
 
 |Task Name                       |Metrics                       |Approximate Results on Dev Set|
 |:-------------------------------|:----------------------------:|----:|
@@ -45,7 +45,7 @@ Click the task name to see the demos:
 
 ```python
 import os
-from keras_xlnet import Tokenizer, load_trained_model_from_checkpoint
+from keras_xlnet import Tokenizer, load_trained_model_from_checkpoint, ATTENTION_TYPE_BI
 
 checkpoint_path = '.../xlnet_cased_L-24_H-1024_A-16'
 
@@ -57,6 +57,7 @@ model = load_trained_model_from_checkpoint(
     memory_len=512,
     target_len=128,
     in_train_phase=False,
+    attention_type=ATTENTION_TYPE_BI,
 )
 model.summary()
 ```

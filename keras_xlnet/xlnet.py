@@ -62,7 +62,7 @@ def build_xlnet(units,
                 mask_index=Tokenizer.SYM_PAD,
                 dropout=0.0,
                 attention_dropout=0.0,
-                attention_type='uni',
+                attention_type=ATTENTION_TYPE_BI,
                 clamp_len=None,
                 shared_biases=True):
     """Build XLNet.

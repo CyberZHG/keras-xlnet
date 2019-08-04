@@ -25,7 +25,7 @@ pip install keras-xlnet
 
 ### GLUE微调
 
-点击任务名可以查看训练样例：
+点击任务名可以查看基础模型的训练样例：
 
 |任务名                           |指标                          |验证集上大致结果|
 |:-------------------------------|:----------------------------:|----:|
@@ -45,7 +45,7 @@ pip install keras-xlnet
 
 ```python
 import os
-from keras_xlnet import Tokenizer, load_trained_model_from_checkpoint
+from keras_xlnet import Tokenizer, load_trained_model_from_checkpoint, ATTENTION_TYPE_BI
 
 checkpoint_path = '.../xlnet_cased_L-24_H-1024_A-16'
 
@@ -57,6 +57,7 @@ model = load_trained_model_from_checkpoint(
     memory_len=512,
     target_len=128,
     in_train_phase=False,
+    attention_type=ATTENTION_TYPE_BI,
 )
 model.summary()
 ```

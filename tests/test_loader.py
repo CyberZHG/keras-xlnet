@@ -6,7 +6,7 @@ import numpy as np
 
 from keras_xlnet.backend import keras
 from keras_xlnet.backend import backend as K
-from keras_xlnet import load_trained_model_from_checkpoint, set_custom_objects
+from keras_xlnet import load_trained_model_from_checkpoint, set_custom_objects, ATTENTION_TYPE_UNI
 
 
 class TestLoader(TestCase):
@@ -35,6 +35,7 @@ class TestLoader(TestCase):
             target_len=5,
             in_train_phase=False,
             mask_index=0,
+            attention_type=ATTENTION_TYPE_UNI,
         )
         set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
@@ -64,6 +65,7 @@ class TestLoader(TestCase):
             target_len=5,
             in_train_phase=False,
             mask_index=0,
+            attention_type=ATTENTION_TYPE_UNI,
         )
         set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
@@ -101,6 +103,7 @@ class TestLoader(TestCase):
             target_len=5,
             in_train_phase=True,
             mask_index=0,
+            attention_type=ATTENTION_TYPE_UNI,
         )
         set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
@@ -137,6 +140,7 @@ class TestLoader(TestCase):
             memory_len=512,
             target_len=128,
             in_train_phase=True,
+            attention_type=ATTENTION_TYPE_UNI,
         )
         current_path = os.path.dirname(os.path.abspath(__file__))
         visual_path = os.path.join(current_path, 'xlnet_large_train.jpg')
@@ -151,6 +155,7 @@ class TestLoader(TestCase):
             memory_len=512,
             target_len=128,
             in_train_phase=False,
+            attention_type=ATTENTION_TYPE_UNI,
         )
         current_path = os.path.dirname(os.path.abspath(__file__))
         visual_path = os.path.join(current_path, 'xlnet_large_tune.jpg')
