@@ -11,7 +11,7 @@ with codecs.open('requirements.txt', 'r', 'utf8') as reader:
 
 setup(
     name='keras-xlnet',
-    version='0.14.1',
+    version='0.15.0',
     packages=find_packages(),
     url='https://github.com/CyberZHG/keras-xlnet',
     license='MIT',
@@ -22,7 +22,7 @@ setup(
     long_description_content_type='text/markdown',
     install_requires=install_requires,
     classifiers=(
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ),

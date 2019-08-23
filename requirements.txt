@@ -1,6 +1,6 @@
 numpy
-Keras
+Keras==2.2.4
 sentencepiece
-keras-transformer>=0.28.0
+keras-transformer>=0.30.0
 keras-transformer-xl>=0.10.0
 keras-trans-mask>=0.3.0
