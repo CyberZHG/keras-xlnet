@@ -46,6 +46,7 @@ def build_model_from_config(config_path,
         target_len=target_len,
         dropout=0.0,
         attention_dropout=0.0,
+        feed_forward_activation=config['ff_activation'],
         clamp_len=None,
         shared_biases=not config['untie_r'],
         **kwargs)

@@ -63,6 +63,7 @@ def build_xlnet(units,
                 dropout=0.0,
                 attention_dropout=0.0,
                 attention_type=ATTENTION_TYPE_BI,
+                feed_forward_activation='gelu',
                 clamp_len=None,
                 shared_biases=True):
     """Build XLNet.
@@ -81,12 +82,15 @@ def build_xlnet(units,
     :param dropout: General dropout rate.
     :param attention_dropout: Dropout rate inside attention layer.
     :param attention_type: 'uni' or 'bi'.
+    :param feed_forward_activation: Activation for feed forward layer.
     :param clamp_len: The maximum value of relative position.
     :param shared_biases: Whether to use the same biases for all layers.
     :return: The built model.
     """
     if permute is None:
         permute = training
+    if feed_forward_activation == 'gelu':
+        feed_forward_activation = gelu
 
     token_input = keras.layers.Input(
         shape=(target_len,),
@@ -211,7 +215,7 @@ def build_xlnet(units,
         feed_forward = FeedForward(
             units=hidden_dim,
             dropout_rate=dropout,
-            activation=gelu,
+            activation=feed_forward_activation,
             name='FeedForward-{}'.format(i + 1),
         )
         if 0.0 < dropout < 1.0:
