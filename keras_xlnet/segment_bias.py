@@ -53,7 +53,7 @@ class SegmentBias(keras.layers.Layer):
         super(SegmentBias, self).build(input_shape)
 
     def call(self, inputs, **kwargs):
-        return K.identity(self.bias_context)
+        return self.bias_context + 0.0
 
     def get_config(self):
         config = {

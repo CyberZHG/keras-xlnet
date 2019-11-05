@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from keras_xlnet.backend import keras, EAGER_MODE
+from keras_xlnet.backend import keras
 from keras_xlnet.backend import backend as K
 from keras_xlnet import PermutationMask
 
@@ -14,13 +14,8 @@ class TestPermutation(TestCase):
         inputs_memory = keras.layers.Input(shape=(3, 3))
         inputs = [inputs_segment, inputs_memory]
         outputs = PermutationMask()(inputs, training=K.learning_phase())
-        learning_phase = K.learning_phase()
-        if EAGER_MODE:
-            learning_phase = K.symbolic_learning_phase()
-        func = K.function(inputs + [learning_phase], outputs)
+        func = K.function(inputs, outputs)
         inputs = [np.zeros((2, 6, 3)), np.zeros((2, 3, 3)), 0]
-        if EAGER_MODE:
-            inputs[-1] = False
         outputs = func(inputs)
         self.assertEqual((2, 6, 9), outputs[0].shape)
         self.assertEqual((2, 6, 9), outputs[1].shape)
@@ -43,8 +38,6 @@ class TestPermutation(TestCase):
         ]
         self.assertEqual(expect, outputs[1][0].tolist())
         inputs = [np.zeros((2, 6, 3)), np.zeros((2, 3, 3)), 1]
-        if EAGER_MODE:
-            inputs[-1] = True
         outputs = func(inputs)
         self.assertEqual((2, 6, 9), outputs[0].shape)
         self.assertEqual((2, 6, 9), outputs[1].shape)

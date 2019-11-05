@@ -1,5 +1,5 @@
 numpy
-Keras==2.2.4
+Keras
 sentencepiece
 keras-transformer>=0.30.0
 keras-transformer-xl>=0.10.0

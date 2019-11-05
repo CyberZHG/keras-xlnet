@@ -41,7 +41,7 @@ class RelativeSegmentEmbedding(keras.layers.Embedding):
         full = K.concatenate([K.zeros_like(memory[:, :, 0]), segment], axis=1)
         relative = K.not_equal(K.expand_dims(segment, axis=-1), K.expand_dims(full, axis=1))
         relative = K.one_hot(K.cast(relative, 'uint8'), 2)
-        return [relative, K.identity(self.embeddings)]
+        return [relative, self.embeddings + 0.0]
 
     def get_config(self):
         config = {

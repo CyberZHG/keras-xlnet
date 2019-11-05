@@ -8,3 +8,5 @@ from .xlnet import *
 from .loader import *
 from .tokenizer import *
 from .pretrained import *
+
+__version__ = '0.18.0'
