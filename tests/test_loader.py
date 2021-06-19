@@ -6,7 +6,7 @@ import numpy as np
 
 from keras_xlnet.backend import keras
 from keras_xlnet.backend import backend as K
-from keras_xlnet import load_trained_model_from_checkpoint, set_custom_objects, ATTENTION_TYPE_UNI
+from keras_xlnet import load_trained_model_from_checkpoint, get_custom_objects, ATTENTION_TYPE_UNI
 
 
 class TestLoader(TestCase):
@@ -37,10 +37,9 @@ class TestLoader(TestCase):
             mask_index=0,
             attention_type=ATTENTION_TYPE_UNI,
         )
-        set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
         model.save(model_path)
-        model = keras.models.load_model(model_path)
+        model = keras.models.load_model(model_path, custom_objects=get_custom_objects())
         model.summary()
 
         def _load_numpy(name):
@@ -67,10 +66,9 @@ class TestLoader(TestCase):
             mask_index=0,
             attention_type=ATTENTION_TYPE_UNI,
         )
-        set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
         model.save(model_path)
-        model = keras.models.load_model(model_path)
+        model = keras.models.load_model(model_path, custom_objects=get_custom_objects())
         model.summary()
 
         def _load_numpy(name):
@@ -105,10 +103,9 @@ class TestLoader(TestCase):
             mask_index=0,
             attention_type=ATTENTION_TYPE_UNI,
         )
-        set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
         model.save(model_path)
-        model = keras.models.load_model(model_path)
+        model = keras.models.load_model(model_path, custom_objects=get_custom_objects())
         model.summary()
 
         def _load_numpy(name):

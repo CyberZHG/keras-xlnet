@@ -1,6 +1,6 @@
 numpy
 Keras
 sentencepiece
-keras-transformer>=0.30.0
-keras-transformer-xl>=0.10.0
-keras-trans-mask>=0.3.0
+keras-transformer>=0.39.0
+keras-transformer-xl>=0.13.0
+keras-trans-mask>=0.5.0

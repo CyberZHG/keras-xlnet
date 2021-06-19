@@ -5,7 +5,7 @@ from unittest import TestCase
 import numpy as np
 
 from keras_xlnet.backend import keras
-from keras_xlnet import build_xlnet, set_custom_objects, ATTENTION_TYPE_BI
+from keras_xlnet import build_xlnet, get_custom_objects, ATTENTION_TYPE_BI
 
 
 class TestXLNet(TestCase):
@@ -24,10 +24,9 @@ class TestXLNet(TestCase):
             dropout=0.1,
             attention_dropout=0.1,
         )
-        set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
         model.save(model_path)
-        model = keras.models.load_model(model_path)
+        model = keras.models.load_model(model_path, custom_objects=get_custom_objects())
         model.summary()
         try:
             current_path = os.path.dirname(os.path.abspath(__file__))
@@ -51,10 +50,9 @@ class TestXLNet(TestCase):
             attention_dropout=0.1,
             attention_type=ATTENTION_TYPE_BI,
         )
-        set_custom_objects()
         model_path = os.path.join(tempfile.gettempdir(), 'test_xlnet_%f.h5' % np.random.random())
         model.save(model_path)
-        model = keras.models.load_model(model_path)
+        model = keras.models.load_model(model_path, custom_objects=get_custom_objects())
         model.summary()
         try:
             current_path = os.path.dirname(os.path.abspath(__file__))

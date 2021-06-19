@@ -13,9 +13,9 @@ class TestPermutation(TestCase):
         inputs_segment = keras.layers.Input(shape=(6, 3))
         inputs_memory = keras.layers.Input(shape=(3, 3))
         inputs = [inputs_segment, inputs_memory]
-        outputs = PermutationMask()(inputs, training=K.learning_phase())
+        outputs = PermutationMask()(inputs, training=0)
         func = K.function(inputs, outputs)
-        inputs = [np.zeros((2, 6, 3)), np.zeros((2, 3, 3)), 0]
+        inputs = [np.zeros((2, 6, 3)), np.zeros((2, 3, 3))]
         outputs = func(inputs)
         self.assertEqual((2, 6, 9), outputs[0].shape)
         self.assertEqual((2, 6, 9), outputs[1].shape)
@@ -37,7 +37,11 @@ class TestPermutation(TestCase):
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0],
         ]
         self.assertEqual(expect, outputs[1][0].tolist())
-        inputs = [np.zeros((2, 6, 3)), np.zeros((2, 3, 3)), 1]
+
+        inputs = [inputs_segment, inputs_memory]
+        outputs = PermutationMask()(inputs, training=1)
+        func = K.function(inputs, outputs)
+        inputs = [np.zeros((2, 6, 3)), np.zeros((2, 3, 3))]
         outputs = func(inputs)
         self.assertEqual((2, 6, 9), outputs[0].shape)
         self.assertEqual((2, 6, 9), outputs[1].shape)

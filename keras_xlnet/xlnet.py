@@ -17,7 +17,7 @@ from .attention import RelativePartialMultiHeadSelfAttention as Attention
 
 __all__ = [
     'ATTENTION_TYPE_UNI', 'ATTENTION_TYPE_BI',
-    'get_custom_objects', 'set_custom_objects', 'build_xlnet',
+    'get_custom_objects', 'build_xlnet',
 ]
 
 ATTENTION_TYPE_UNI = 'uni'
@@ -42,11 +42,6 @@ def get_custom_objects() -> dict:
         'RelativePartialMultiHeadSelfAttention': Attention,
         'FeedForward': FeedForward,
     }
-
-
-def set_custom_objects() -> None:
-    for key, val in get_custom_objects().items():
-        keras.utils.get_custom_objects()[key] = val
 
 
 def build_xlnet(units,
