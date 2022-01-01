@@ -1,6 +1,6 @@
 import tensorflow as tf
-from .backend import keras, activations, initializers, regularizers, constraints, TF_KERAS
-from .backend import backend as K
+from tensorflow import keras
+from tensorflow.keras import backend as K
 
 __all__ = ['RelativePartialMultiHeadSelfAttention']
 
@@ -52,15 +52,15 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         self.num_head = num_head
         self.units_head = units // num_head
         self.activation = activation
-        self.activation = activations.get(activation)
+        self.activation = keras.activations.get(activation)
         self.use_bias = use_bias
         self.attention_dropout = attention_dropout
-        self.kernel_initializer = initializers.get(kernel_initializer)
-        self.bias_initializer = initializers.get(bias_initializer)
-        self.kernel_regularizer = regularizers.get(kernel_regularizer)
-        self.bias_regularizer = regularizers.get(bias_regularizer)
-        self.kernel_constraint = constraints.get(kernel_constraint)
-        self.bias_constraint = constraints.get(bias_constraint)
+        self.kernel_initializer = keras.initializers.get(kernel_initializer)
+        self.bias_initializer = keras.initializers.get(bias_initializer)
+        self.kernel_regularizer = keras.regularizers.get(kernel_regularizer)
+        self.bias_regularizer = keras.regularizers.get(bias_regularizer)
+        self.kernel_constraint = keras.constraints.get(kernel_constraint)
+        self.bias_constraint = keras.constraints.get(bias_constraint)
 
         self.kernel, self.bias = None, None
         self.att_drop_layer = None
@@ -213,26 +213,25 @@ class RelativePartialMultiHeadSelfAttention(keras.layers.Layer):
         if self.activation is not None:
             w_o = self.activation(w_o)
 
-        if TF_KERAS:
-            # Add shape information to tensor when using `tf.keras`
-            input_shape = K.int_shape(inputs)
-            if input_shape[1] is not None:
-                w_o = K.reshape(w_o, (-1,) + input_shape[1:])
+        # Add shape information to tensor
+        input_shape = K.int_shape(inputs)
+        if input_shape[1] is not None:
+            w_o = K.reshape(w_o, (-1,) + input_shape[1:])
         return w_o
 
     def get_config(self):
         config = {
             'units': self.units,
             'num_head': self.num_head,
-            'activation': activations.serialize(self.activation),
+            'activation': keras.activations.serialize(self.activation),
             'use_bias': self.use_bias,
             'attention_dropout': self.attention_dropout,
-            'kernel_initializer': initializers.serialize(self.kernel_initializer),
-            'bias_initializer': initializers.serialize(self.bias_initializer),
-            'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
-            'bias_regularizer': regularizers.serialize(self.bias_regularizer),
-            'kernel_constraint': constraints.serialize(self.kernel_constraint),
-            'bias_constraint': constraints.serialize(self.bias_constraint),
+            'kernel_initializer': keras.initializers.serialize(self.kernel_initializer),
+            'bias_initializer': keras.initializers.serialize(self.bias_initializer),
+            'kernel_regularizer': keras.regularizers.serialize(self.kernel_regularizer),
+            'bias_regularizer': keras.regularizers.serialize(self.bias_regularizer),
+            'kernel_constraint': keras.constraints.serialize(self.kernel_constraint),
+            'bias_constraint': keras.constraints.serialize(self.bias_constraint),
         }
         base_config = super(RelativePartialMultiHeadSelfAttention, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))

@@ -3,8 +3,8 @@ import tempfile
 from unittest import TestCase
 
 import numpy as np
+from tensorflow import keras
 
-from keras_xlnet.backend import keras
 from keras_xlnet import build_xlnet, get_custom_objects, ATTENTION_TYPE_BI
 
 

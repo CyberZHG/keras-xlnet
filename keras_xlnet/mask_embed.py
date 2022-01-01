@@ -1,5 +1,5 @@
-from .backend import keras, initializers, regularizers, constraints
-from .backend import backend as K
+from tensorflow import keras
+from tensorflow.keras import backend as K
 
 __all__ = ['MaskEmbedding']
 
@@ -30,9 +30,9 @@ class MaskEmbedding(keras.layers.Layer):
         super(MaskEmbedding, self).__init__(**kwargs)
         self.supports_masking = True
         self.units = units
-        self.initializer = initializers.get(initializer)
-        self.regularizer = regularizers.get(regularizer)
-        self.constraint = constraints.get(constraint)
+        self.initializer = keras.initializers.get(initializer)
+        self.regularizer = keras.regularizers.get(regularizer)
+        self.constraint = keras.constraints.get(constraint)
 
         self.embeddings = None
 
@@ -63,9 +63,9 @@ class MaskEmbedding(keras.layers.Layer):
     def get_config(self):
         config = {
             'units': self.units,
-            'initializer': initializers.serialize(self.initializer),
-            'regularizer': regularizers.serialize(self.regularizer),
-            'constraint': constraints.serialize(self.constraint),
+            'initializer': keras.initializers.serialize(self.initializer),
+            'regularizer': keras.regularizers.serialize(self.regularizer),
+            'constraint': keras.constraints.serialize(self.constraint),
         }
         base_config = super(MaskEmbedding, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))

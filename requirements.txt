@@ -1,6 +1,4 @@
-numpy
-Keras
 sentencepiece
-keras-transformer>=0.39.0
-keras-transformer-xl>=0.13.0
-keras-trans-mask>=0.5.0
+keras-transformer==0.40.0
+keras-transformer-xl==0.14.0
+keras-trans-mask==0.6.0

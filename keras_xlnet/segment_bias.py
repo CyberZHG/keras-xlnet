@@ -1,5 +1,5 @@
-from .backend import keras, initializers, regularizers, constraints
-from .backend import backend as K
+from tensorflow import keras
+from tensorflow.keras import backend as K
 
 __all__ = ['SegmentBias']
 
@@ -29,9 +29,9 @@ class SegmentBias(keras.layers.Layer):
         super(SegmentBias, self).__init__(**kwargs)
         self.supports_masking = True
         self.units = units
-        self.bias_initializer = initializers.get(bias_initializer)
-        self.bias_regularizer = regularizers.get(bias_regularizer)
-        self.bias_constraint = constraints.get(bias_constraint)
+        self.bias_initializer = keras.initializers.get(bias_initializer)
+        self.bias_regularizer = keras.regularizers.get(bias_regularizer)
+        self.bias_constraint = keras.constraints.get(bias_constraint)
 
         self.bias_context, self.bias_relative = None, None
 

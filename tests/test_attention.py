@@ -1,6 +1,7 @@
 from unittest import TestCase
 
-from keras_xlnet.backend import keras
+from tensorflow import keras
+
 from keras_transformer_xl import RelativeBias
 from keras_xlnet import RelativePartialMultiHeadSelfAttention, SegmentBias
 

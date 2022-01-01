@@ -1,9 +1,9 @@
 from unittest import TestCase
 
 import numpy as np
+from tensorflow import keras
+from tensorflow.keras import backend as K
 
-from keras_xlnet.backend import keras
-from keras_xlnet.backend import backend as K
 from keras_xlnet import RelativeSegmentEmbedding
 
 
